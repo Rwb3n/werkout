@@ -1,0 +1,579 @@
+=== TEST LOG: test_run ===
+Started at: 2025-04-01T11:50:11.699Z
+
+[2025-04-01T11:50:11.700Z] [INFO] Starting test execution
+[2025-04-01T11:50:11.700Z] [INFO] Executing: jest --colors 'unit/**/*.test.js'
+[2025-04-01T11:50:34.932Z] [ERROR] Test execution failed
+Error: Command failed: jest --colors 'unit/**/*.test.js'
+[0m[7m[1m[31m FAIL [39m[22m[27m[0m [2mtests/unit/backend/[22m[1mclerk.middleware.test.js[22m
+  [1m● [22mTest suite failed to run
+
+    Cannot find module '@clerk/clerk-sdk-node' from 'tests/unit/backend/clerk.middleware.test.js'
+
+    [0m [90m  7 |[39m
+     [90m  8 |[39m [90m// Mock the Clerk SDK[39m
+    [31m[1m>[22m[39m[90m  9 |[39m jest[33m.[39mmock([32m'@clerk/clerk-sdk-node'[39m[33m,[39m () [33m=>[39m {
+     [90m    |[39m      [31m[1m^[22m[39m
+     [90m 10 |[39m   [36mreturn[39m {
+     [90m 11 |[39m     [33mClerk[39m[33m:[39m jest[33m.[39mfn()[33m.[39mmockImplementation(() [33m=>[39m {
+     [90m 12 |[39m       [36mreturn[39m {[0m
+
+      [2mat Resolver._throwModNotFoundError ([22mnode_modules/jest-resolve/build/resolver.js[2m:427:11)[22m
+      [2mat Object.mock ([22m[0m[36mtests/unit/backend/clerk.middleware.test.js[39m[0m[2m:9:6)[22m
+
+[0m[7m[1m[31m FAIL [39m[22m[27m[0m [2mtests/unit/[22m[1mstability.test.js[22m ([0m[1m[41m8.097 s[49m[22m[0m)
+[1m[31m  [1m● [22m[1mStability Test Script › should have the correct function exports[39m[22m
+
+    [2mexpect([22m[31mreceived[39m[2m).[22mtoContain[2m([22m[32mexpected[39m[2m) // indexOf[22m
+
+    Expected substring: [32m"function checkServer"[39m
+    Received string:    [31m"/**·[39m
+    [31m * Werkout.in Stability Test Script·[39m
+    [31m *··[39m
+    [31m * This script tests the stability of both frontend and backend servers·[39m
+    [31m * by starting them and checking if they respond correctly.·[39m
+    [31m *··[39m
+    [31m * Usage: node test-stability.js·[39m
+    [31m */···[39m
+    [31mconst { execSync, spawn } = require('child_process');·[39m
+    [31mconst fetch = require('node-fetch');·[39m
+    [31mconst path = require('path');·[39m
+    [31mconst fs = require('fs');···[39m
+    [31m// Paths·[39m
+    [31mconst backendDir = path.join(__dirname, '..', 'src', 'backend');·[39m
+    [31mconst frontendDir = path.join(__dirname, '..', 'src', 'frontend');···[39m
+    [31m// Configuration·[39m
+    [31mconst backendUrl = 'http://localhost:5000/api/health';·[39m
+    [31mconst frontendUrl = 'http://localhost:3000';·[39m
+    [31mconst maxRetries = 5;·[39m
+    [31mconst retryInterval = 2000; // 2 seconds···[39m
+    [31m// Colors for console output·[39m
+    [31mconst colors = {·[39m
+    [31m  reset: '\\x1b[0m',·[39m
+    [31m  green: '\\x1b[32m',·[39m
+    [31m  red: '\\x1b[31m',·[39m
+    [31m  yellow: '\\x1b[33m',·[39m
+    [31m  blue: '\\x1b[34m'·[39m
+    [31m};···[39m
+    [31m/**·[39m
+    [31m * Wait for a specific amount of time·[39m
+    [31m */·[39m
+    [31mconst wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));···[39m
+    [31m/**·[39m
+    [31m * Check if a server is running by making a request to it·[39m
+    [31m */·[39m
+    [31mconst checkServer = async (url, name, retry = 0) => {·[39m
+    [31m  try {·[39m
+    [31m    console.log(`${colors.blue}Checking ${name} at ${url}...${colors.reset}`);·[39m
+    [31m    const response = await fetch(url);·[39m
+    [31m    if (response.ok) {·[39m
+    [31m      console.log(`${colors.green}✓ ${name} is running correctly${colors.reset}`);·[39m
+    [31m      return true;·[39m
+    [31m    } else {·[39m
+    [31m      console.log(`${colors.red}✗ ${name} returned status ${response.status}${colors.reset}`);·[39m
+    [31m      return false;·[39m
+    [31m    }·[39m
+    [31m  } catch (error) {·[39m
+    [31m    if (retry < maxRetries) {·[39m
+    [31m      console.log(`${colors.yellow}! ${name} not responding, retrying in ${retryInterval/1000}s (${retry + 1}/${maxRetries})...${colors.reset}`);·[39m
+    [31m      await wait(retryInterval);·[39m
+    [31m      return checkServer(url, name, retry + 1);·[39m
+    [31m    } else {·[39m
+    [31m      console.log(`${colors.red}✗ ${name} is not running: ${error.message}${colors.reset}`);·[39m
+    [31m      return false;·[39m
+    [31m    }·[39m
+    [31m  }·[39m
+    [31m};···[39m
+    [31m/**·[39m
+    [31m * Check if the required environment files exist·[39m
+    [31m */·[39m
+    [31mconst checkEnvFiles = () => {·[39m
+    [31m  const backendEnvPath = path.join(backendDir, '.env');·[39m
+    [31m  const frontendEnvPath = path.join(frontendDir, '.env.development');·····[39m
+    [31m  let allFilesExist = true;·····[39m
+    [31m  if (!fs.existsSync(backendEnvPath)) {·[39m
+    [31m    console.log(`${colors.red}✗ Backend .env file not found at ${backendEnvPath}${colors.reset}`);·[39m
+    [31m    allFilesExist = false;·[39m
+    [31m  } else {·[39m
+    [31m    console.log(`${colors.green}✓ Backend .env file exists${colors.reset}`);·[39m
+    [31m  }·····[39m
+    [31m  if (!fs.existsSync(frontendEnvPath)) {·[39m
+    [31m    console.log(`${colors.red}✗ Frontend .env.development file not found at ${frontendEnvPath}${colors.reset}`);·[39m
+    [31m    allFilesExist = false;·[39m
+    [31m  } else {·[39m
+    [31m    console.log(`${colors.green}✓ Frontend .env.development file exists${colors.reset}`);·[39m
+    [31m  }·····[39m
+    [31m  return allFilesExist;·[39m
+    [31m};···[39m
+    [31m/**·[39m
+    [31m * Test the backend server·[39m
+    [31m */·[39m
+    [31mconst testBackend = async () => {·[39m
+    [31m  // Install dependencies if node_modules doesn't exist·[39m
+    [31m  if (!fs.existsSync(path.join(backendDir, 'node_modules'))) {·[39m
+    [31m    console.log(`${colors.yellow}Installing backend dependencies...${colors.reset}`);·[39m
+    [31m    try {·[39m
+    [31m      execSync('npm install', { cwd: backendDir, stdio: 'inherit' });·[39m
+    [31m    } catch (error) {·[39m
+    [31m      console.log(`${colors.red}✗ Failed to install backend dependencies${colors.reset}`);·[39m
+    [31m      return false;·[39m
+    [31m    }·[39m
+    [31m  }·····[39m
+    [31m  console.log(`${colors.blue}Starting backend server...${colors.reset}`);·····[39m
+    [31m  // Start the backend server·[39m
+    [31m  const backendServer = spawn('node', ['src/server.js'], {··[39m
+    [31m    cwd: backendDir,·[39m
+    [31m    env: { ...process.env, PORT: 5000 },·[39m
+    [31m    stdio: ['ignore', 'pipe', 'pipe']·[39m
+    [31m  });·····[39m
+    [31m  // Log backend output·[39m
+    [31m  backendServer.stdout.on('data', (data) => {·[39m
+    [31m    console.log(`${colors.blue}Backend:${colors.reset} ${data.toString().trim()}`);·[39m
+    [31m  });·····[39m
+    [31m  backendServer.stderr.on('data', (data) => {·[39m
+    [31m    console.log(`${colors.red}Backend Error:${colors.reset} ${data.toString().trim()}`);·[39m
+    [31m  });·····[39m
+    [31m  // Give server time to start·[39m
+    [31m  await wait(2000);·····[39m
+    [31m  // Check if backend is running·[39m
+    [31m  const backendRunning = await checkServer(backendUrl, 'Backend');·····[39m
+    [31m  if (!backendRunning) {·[39m
+    [31m    console.log(`${colors.red}✗ Backend stability test failed${colors.reset}`);·[39m
+    [31m    backendServer.kill();·[39m
+    [31m    return false;·[39m
+    [31m  }·····[39m
+    [31m  console.log(`${colors.green}✓ Backend stability test passed${colors.reset}`);·[39m
+    [31m  backendServer.kill();·[39m
+    [31m  return true;·[39m
+    [31m};···[39m
+    [31m/**·[39m
+    [31m * Test the frontend server·[39m
+    [31m */·[39m
+    [31mconst testFrontend = async () => {·[39m
+    [31m  // Install dependencies if node_modules doesn't exist·[39m
+    [31m  if (!fs.existsSync(path.join(frontendDir, 'node_modules'))) {·[39m
+    [31m    console.log(`${colors.yellow}Installing frontend dependencies...${colors.reset}`);·[39m
+    [31m    try {·[39m
+    [31m      execSync('npm install', { cwd: frontendDir, stdio: 'inherit' });·[39m
+    [31m    } catch (error) {·[39m
+    [31m      console.log(`${colors.red}✗ Failed to install frontend dependencies${colors.reset}`);·[39m
+    [31m      return false;·[39m
+    [31m    }·[39m
+    [31m  }·····[39m
+    [31m  console.log(`${colors.blue}Starting frontend server...${colors.reset}`);·····[39m
+    [31m  // Start the frontend server·[39m
+    [31m  const frontendServer = spawn('npm', ['run', 'dev'], {··[39m
+    [31m    cwd: frontendDir,·[39m
+    [31m    stdio: ['ignore', 'pipe', 'pipe']·[39m
+    [31m  });·····[39m
+    [31m  // Log frontend output·[39m
+    [31m  frontendServer.stdout.on('data', (data) => {·[39m
+    [31m    console.log(`${colors.blue}Frontend:${colors.reset} ${data.toString().trim()}`);·[39m
+    [31m  });·····[39m
+    [31m  frontendServer.stderr.on('data', (data) => {·[39m
+    [31m    console.log(`${colors.red}Frontend Error:${colors.reset} ${data.toString().trim()}`);·[39m
+    [31m  });·····[39m
+    [31m  // Give server time to start·[39m
+    [31m  await wait(5000);·····[39m
+    [31m  // Check if frontend is running·[39m
+    [31m  const frontendRunning = await checkServer(frontendUrl, 'Frontend');·····[39m
+    [31m  if (!frontendRunning) {·[39m
+    [31m    console.log(`${colors.red}✗ Frontend stability test failed${colors.reset}`);·[39m
+    [31m    frontendServer.kill();·[39m
+    [31m    return false;·[39m
+    [31m  }·····[39m
+    [31m  console.log(`${colors.green}✓ Frontend stability test passed${colors.reset}`);·[39m
+    [31m  frontendServer.kill();·[39m
+    [31m  return true;·[39m
+    [31m};···[39m
+    [31m/**·[39m
+    [31m * Main function·[39m
+    [31m */·[39m
+    [31masync function main() {·[39m
+    [31m  console.log(`${colors.blue}============================================${colors.reset}`);·[39m
+    [31m  console.log(`${colors.blue}Werkout.in Stability Test${colors.reset}`);·[39m
+    [31m  console.log(`${colors.blue}============================================${colors.reset}`);·····[39m
+    [31m  // Check environment files·[39m
+    [31m  if (!checkEnvFiles()) {·[39m
+    [31m    console.log(`${colors.red}✗ Environment files check failed${colors.reset}`);·[39m
+    [31m    process.exit(1);·[39m
+    [31m  }·····[39m
+    [31m  // Test backend·[39m
+    [31m  const backendSuccess = await testBackend();·····[39m
+    [31m  // Test frontend·[39m
+    [31m  const frontendSuccess = await testFrontend();·····[39m
+    [31m  // Final results·[39m
+    [31m  console.log(`${colors.blue}============================================${colors.reset}`);·[39m
+    [31m  console.log(`${colors.blue}Test Results:${colors.reset}`);·[39m
+    [31m  console.log(`${colors.blue}============================================${colors.reset}`);·[39m
+    [31m  console.log(`Backend: ${backendSuccess ? colors.green + 'PASS' : colors.red + 'FAIL'}${colors.reset}`);·[39m
+    [31m  console.log(`Frontend: ${frontendSuccess ? colors.green + 'PASS' : colors.red + 'FAIL'}${colors.reset}`);·[39m
+    [31m  console.log(`Overall: ${backendSuccess && frontendSuccess ? colors.green + 'PASS' : colors.red + 'FAIL'}${colors.reset}`);·····[39m
+    [31m  if (backendSuccess && frontendSuccess) {·[39m
+    [31m    console.log(`${colors.green}✓ Stability test completed successfully!${colors.reset}`);·[39m
+    [31m    process.exit(0);·[39m
+    [31m  } else {·[39m
+    [31m    console.log(`${colors.red}✗ Stability test failed${colors.reset}`);·[39m
+    [31m    process.exit(1);·[39m
+    [31m  }·[39m
+    [31m}···[39m
+    [31m// Run the main function·[39m
+    [31mmain().catch(error => {·[39m
+    [31m  console.error(`${colors.red}An unexpected error occurred:${colors.reset}`, error);·[39m
+    [31m  process.exit(1);·[39m
+    [31m}); "[39m
+[2m[22m
+[2m    [0m [90m 41 |[39m     [22m
+[2m     [90m 42 |[39m     [90m// Check for key functions[39m[22m
+[2m    [31m[1m>[22m[2m[39m[90m 43 |[39m     expect(scriptContent)[33m.[39mtoContain([32m'function checkServer'[39m)[33m;[39m[22m
+[2m     [90m    |[39m                           [31m[1m^[22m[2m[39m[22m
+[2m     [90m 44 |[39m     expect(scriptContent)[33m.[39mtoContain([32m'function testBackend'[39m)[33m;[39m[22m
+[2m     [90m 45 |[39m     expect(scriptContent)[33m.[39mtoContain([32m'function testFrontend'[39m)[33m;[39m[22m
+[2m     [90m 46 |[39m     expect(scriptContent)[33m.[39mtoContain([32m'function main'[39m)[33m;[39m[0m[22m
+[2m[22m
+[2m      [2mat Object.toContain ([22m[2m[0m[36mtests/unit/stability.test.js[39m[0m[2m:43:27)[22m[2m[22m
+
+[0m[7m[1m[31m FAIL [39m[22m[27m[0m [2mtests/unit/backend/[22m[1mauth.middleware.test.js[22m
+  [1m● [22mTest suite failed to run
+
+    Cannot find module 'jsonwebtoken' from 'tests/unit/backend/auth.middleware.test.js'
+
+    [0m[31m[1m>[22m[39m[90m 1 |[39m [36mconst[39m jwt [33m=[39m require([32m'jsonwebtoken'[39m)[33m;[39m
+     [90m   |[39m                                    [31m[1m^[22m[39m
+     [90m 2 |[39m [36mconst[39m { protect } [33m=[39m require([32m'../../../src/backend/src/middleware/auth.middleware'[39m)[33m;[39m
+     [90m 3 |[39m
+     [90m 4 |[39m [90m// Mock the next function[39m[0m
+
+      [2mat Resolver._throwModNotFoundError ([22mnode_modules/jest-resolve/build/resolver.js[2m:427:11)[22m
+      [2mat Object.<anonymous> ([22m[0m[36mtests/unit/backend/auth.middleware.test.js[39m[0m[2m:1:36)[22m
+
+[0m[7m[1m[31m FAIL [39m[22m[27m[0m [2mtests/unit/backend/[22m[1mSeekerProfile.model.test.js[22m
+  [1m● [22mTest suite failed to run
+
+    Cannot find module 'mongoose' from 'tests/unit/backend/SeekerProfile.model.test.js'
+
+    [0m[31m[1m>[22m[39m[90m 1 |[39m [36mconst[39m mongoose [33m=[39m require([32m'mongoose'[39m)[33m;[39m
+     [90m   |[39m                                     [31m[1m^[22m[39m
+     [90m 2 |[39m [36mconst[39m [33mSeekerProfile[39m [33m=[39m require([32m'../../../src/backend/src/models/SeekerProfile.model'[39m)[33m;[39m
+     [90m 3 |[39m [36mconst[39m [33mTestLogger[39m [33m=[39m require([32m'../../utils/testLogger'[39m)[33m;[39m
+     [90m 4 |[39m[0m
+
+      [2mat Resolver._throwModNotFoundError ([22mnode_modules/jest-resolve/build/resolver.js[2m:427:11)[22m
+      [2mat Object.<anonymous> ([22m[0m[36mtests/unit/backend/SeekerProfile.model.test.js[39m[0m[2m:1:37)[22m
+
+[0m[7m[1m[31m FAIL [39m[22m[27m[0m [2mtests/unit/backend/[22m[1mhealth.endpoint.test.js[22m
+  [1m● [22mTest suite failed to run
+
+    Cannot find module 'express' from 'tests/unit/backend/health.endpoint.test.js'
+
+    [0m [90m 1 |[39m [36mconst[39m request [33m=[39m require([32m'supertest'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 2 |[39m [36mconst[39m express [33m=[39m require([32m'express'[39m)[33m;[39m
+     [90m   |[39m                 [31m[1m^[22m[39m
+     [90m 3 |[39m [36mconst[39m app [33m=[39m express()[33m;[39m
+     [90m 4 |[39m
+     [90m 5 |[39m [90m// Mock the logger to prevent test output pollution[39m[0m
+
+      [2mat Resolver._throwModNotFoundError ([22mnode_modules/jest-resolve/build/resolver.js[2m:427:11)[22m
+      [2mat Object.require ([22m[0m[36mtests/unit/backend/health.endpoint.test.js[39m[0m[2m:2:17)[22m
+
+[1mTest Suites: [22m[1m[31m5 failed[39m[22m, 5 total
+[1mTests:       [22m[1m[31m1 failed[39m[22m, [1m[32m2 passed[39m[22m, 3 total
+[1mSnapshots:   [22m0 total
+[1mTime:[22m        14.304 s
+[2mRan all test suites[22m[2m.[22m
+
+Stack: Error: Command failed: jest --colors 'unit/**/*.test.js'
+[0m[7m[1m[31m FAIL [39m[22m[27m[0m [2mtests/unit/backend/[22m[1mclerk.middleware.test.js[22m
+  [1m● [22mTest suite failed to run
+
+    Cannot find module '@clerk/clerk-sdk-node' from 'tests/unit/backend/clerk.middleware.test.js'
+
+    [0m [90m  7 |[39m
+     [90m  8 |[39m [90m// Mock the Clerk SDK[39m
+    [31m[1m>[22m[39m[90m  9 |[39m jest[33m.[39mmock([32m'@clerk/clerk-sdk-node'[39m[33m,[39m () [33m=>[39m {
+     [90m    |[39m      [31m[1m^[22m[39m
+     [90m 10 |[39m   [36mreturn[39m {
+     [90m 11 |[39m     [33mClerk[39m[33m:[39m jest[33m.[39mfn()[33m.[39mmockImplementation(() [33m=>[39m {
+     [90m 12 |[39m       [36mreturn[39m {[0m
+
+      [2mat Resolver._throwModNotFoundError ([22mnode_modules/jest-resolve/build/resolver.js[2m:427:11)[22m
+      [2mat Object.mock ([22m[0m[36mtests/unit/backend/clerk.middleware.test.js[39m[0m[2m:9:6)[22m
+
+[0m[7m[1m[31m FAIL [39m[22m[27m[0m [2mtests/unit/[22m[1mstability.test.js[22m ([0m[1m[41m8.097 s[49m[22m[0m)
+[1m[31m  [1m● [22m[1mStability Test Script › should have the correct function exports[39m[22m
+
+    [2mexpect([22m[31mreceived[39m[2m).[22mtoContain[2m([22m[32mexpected[39m[2m) // indexOf[22m
+
+    Expected substring: [32m"function checkServer"[39m
+    Received string:    [31m"/**·[39m
+    [31m * Werkout.in Stability Test Script·[39m
+    [31m *··[39m
+    [31m * This script tests the stability of both frontend and backend servers·[39m
+    [31m * by starting them and checking if they respond correctly.·[39m
+    [31m *··[39m
+    [31m * Usage: node test-stability.js·[39m
+    [31m */···[39m
+    [31mconst { execSync, spawn } = require('child_process');·[39m
+    [31mconst fetch = require('node-fetch');·[39m
+    [31mconst path = require('path');·[39m
+    [31mconst fs = require('fs');···[39m
+    [31m// Paths·[39m
+    [31mconst backendDir = path.join(__dirname, '..', 'src', 'backend');·[39m
+    [31mconst frontendDir = path.join(__dirname, '..', 'src', 'frontend');···[39m
+    [31m// Configuration·[39m
+    [31mconst backendUrl = 'http://localhost:5000/api/health';·[39m
+    [31mconst frontendUrl = 'http://localhost:3000';·[39m
+    [31mconst maxRetries = 5;·[39m
+    [31mconst retryInterval = 2000; // 2 seconds···[39m
+    [31m// Colors for console output·[39m
+    [31mconst colors = {·[39m
+    [31m  reset: '\\x1b[0m',·[39m
+    [31m  green: '\\x1b[32m',·[39m
+    [31m  red: '\\x1b[31m',·[39m
+    [31m  yellow: '\\x1b[33m',·[39m
+    [31m  blue: '\\x1b[34m'·[39m
+    [31m};···[39m
+    [31m/**·[39m
+    [31m * Wait for a specific amount of time·[39m
+    [31m */·[39m
+    [31mconst wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));···[39m
+    [31m/**·[39m
+    [31m * Check if a server is running by making a request to it·[39m
+    [31m */·[39m
+    [31mconst checkServer = async (url, name, retry = 0) => {·[39m
+    [31m  try {·[39m
+    [31m    console.log(`${colors.blue}Checking ${name} at ${url}...${colors.reset}`);·[39m
+    [31m    const response = await fetch(url);·[39m
+    [31m    if (response.ok) {·[39m
+    [31m      console.log(`${colors.green}✓ ${name} is running correctly${colors.reset}`);·[39m
+    [31m      return true;·[39m
+    [31m    } else {·[39m
+    [31m      console.log(`${colors.red}✗ ${name} returned status ${response.status}${colors.reset}`);·[39m
+    [31m      return false;·[39m
+    [31m    }·[39m
+    [31m  } catch (error) {·[39m
+    [31m    if (retry < maxRetries) {·[39m
+    [31m      console.log(`${colors.yellow}! ${name} not responding, retrying in ${retryInterval/1000}s (${retry + 1}/${maxRetries})...${colors.reset}`);·[39m
+    [31m      await wait(retryInterval);·[39m
+    [31m      return checkServer(url, name, retry + 1);·[39m
+    [31m    } else {·[39m
+    [31m      console.log(`${colors.red}✗ ${name} is not running: ${error.message}${colors.reset}`);·[39m
+    [31m      return false;·[39m
+    [31m    }·[39m
+    [31m  }·[39m
+    [31m};···[39m
+    [31m/**·[39m
+    [31m * Check if the required environment files exist·[39m
+    [31m */·[39m
+    [31mconst checkEnvFiles = () => {·[39m
+    [31m  const backendEnvPath = path.join(backendDir, '.env');·[39m
+    [31m  const frontendEnvPath = path.join(frontendDir, '.env.development');·····[39m
+    [31m  let allFilesExist = true;·····[39m
+    [31m  if (!fs.existsSync(backendEnvPath)) {·[39m
+    [31m    console.log(`${colors.red}✗ Backend .env file not found at ${backendEnvPath}${colors.reset}`);·[39m
+    [31m    allFilesExist = false;·[39m
+    [31m  } else {·[39m
+    [31m    console.log(`${colors.green}✓ Backend .env file exists${colors.reset}`);·[39m
+    [31m  }·····[39m
+    [31m  if (!fs.existsSync(frontendEnvPath)) {·[39m
+    [31m    console.log(`${colors.red}✗ Frontend .env.development file not found at ${frontendEnvPath}${colors.reset}`);·[39m
+    [31m    allFilesExist = false;·[39m
+    [31m  } else {·[39m
+    [31m    console.log(`${colors.green}✓ Frontend .env.development file exists${colors.reset}`);·[39m
+    [31m  }·····[39m
+    [31m  return allFilesExist;·[39m
+    [31m};···[39m
+    [31m/**·[39m
+    [31m * Test the backend server·[39m
+    [31m */·[39m
+    [31mconst testBackend = async () => {·[39m
+    [31m  // Install dependencies if node_modules doesn't exist·[39m
+    [31m  if (!fs.existsSync(path.join(backendDir, 'node_modules'))) {·[39m
+    [31m    console.log(`${colors.yellow}Installing backend dependencies...${colors.reset}`);·[39m
+    [31m    try {·[39m
+    [31m      execSync('npm install', { cwd: backendDir, stdio: 'inherit' });·[39m
+    [31m    } catch (error) {·[39m
+    [31m      console.log(`${colors.red}✗ Failed to install backend dependencies${colors.reset}`);·[39m
+    [31m      return false;·[39m
+    [31m    }·[39m
+    [31m  }·····[39m
+    [31m  console.log(`${colors.blue}Starting backend server...${colors.reset}`);·····[39m
+    [31m  // Start the backend server·[39m
+    [31m  const backendServer = spawn('node', ['src/server.js'], {··[39m
+    [31m    cwd: backendDir,·[39m
+    [31m    env: { ...process.env, PORT: 5000 },·[39m
+    [31m    stdio: ['ignore', 'pipe', 'pipe']·[39m
+    [31m  });·····[39m
+    [31m  // Log backend output·[39m
+    [31m  backendServer.stdout.on('data', (data) => {·[39m
+    [31m    console.log(`${colors.blue}Backend:${colors.reset} ${data.toString().trim()}`);·[39m
+    [31m  });·····[39m
+    [31m  backendServer.stderr.on('data', (data) => {·[39m
+    [31m    console.log(`${colors.red}Backend Error:${colors.reset} ${data.toString().trim()}`);·[39m
+    [31m  });·····[39m
+    [31m  // Give server time to start·[39m
+    [31m  await wait(2000);·····[39m
+    [31m  // Check if backend is running·[39m
+    [31m  const backendRunning = await checkServer(backendUrl, 'Backend');·····[39m
+    [31m  if (!backendRunning) {·[39m
+    [31m    console.log(`${colors.red}✗ Backend stability test failed${colors.reset}`);·[39m
+    [31m    backendServer.kill();·[39m
+    [31m    return false;·[39m
+    [31m  }·····[39m
+    [31m  console.log(`${colors.green}✓ Backend stability test passed${colors.reset}`);·[39m
+    [31m  backendServer.kill();·[39m
+    [31m  return true;·[39m
+    [31m};···[39m
+    [31m/**·[39m
+    [31m * Test the frontend server·[39m
+    [31m */·[39m
+    [31mconst testFrontend = async () => {·[39m
+    [31m  // Install dependencies if node_modules doesn't exist·[39m
+    [31m  if (!fs.existsSync(path.join(frontendDir, 'node_modules'))) {·[39m
+    [31m    console.log(`${colors.yellow}Installing frontend dependencies...${colors.reset}`);·[39m
+    [31m    try {·[39m
+    [31m      execSync('npm install', { cwd: frontendDir, stdio: 'inherit' });·[39m
+    [31m    } catch (error) {·[39m
+    [31m      console.log(`${colors.red}✗ Failed to install frontend dependencies${colors.reset}`);·[39m
+    [31m      return false;·[39m
+    [31m    }·[39m
+    [31m  }·····[39m
+    [31m  console.log(`${colors.blue}Starting frontend server...${colors.reset}`);·····[39m
+    [31m  // Start the frontend server·[39m
+    [31m  const frontendServer = spawn('npm', ['run', 'dev'], {··[39m
+    [31m    cwd: frontendDir,·[39m
+    [31m    stdio: ['ignore', 'pipe', 'pipe']·[39m
+    [31m  });·····[39m
+    [31m  // Log frontend output·[39m
+    [31m  frontendServer.stdout.on('data', (data) => {·[39m
+    [31m    console.log(`${colors.blue}Frontend:${colors.reset} ${data.toString().trim()}`);·[39m
+    [31m  });·····[39m
+    [31m  frontendServer.stderr.on('data', (data) => {·[39m
+    [31m    console.log(`${colors.red}Frontend Error:${colors.reset} ${data.toString().trim()}`);·[39m
+    [31m  });·····[39m
+    [31m  // Give server time to start·[39m
+    [31m  await wait(5000);·····[39m
+    [31m  // Check if frontend is running·[39m
+    [31m  const frontendRunning = await checkServer(frontendUrl, 'Frontend');·····[39m
+    [31m  if (!frontendRunning) {·[39m
+    [31m    console.log(`${colors.red}✗ Frontend stability test failed${colors.reset}`);·[39m
+    [31m    frontendServer.kill();·[39m
+    [31m    return false;·[39m
+    [31m  }·····[39m
+    [31m  console.log(`${colors.green}✓ Frontend stability test passed${colors.reset}`);·[39m
+    [31m  frontendServer.kill();·[39m
+    [31m  return true;·[39m
+    [31m};···[39m
+    [31m/**·[39m
+    [31m * Main function·[39m
+    [31m */·[39m
+    [31masync function main() {·[39m
+    [31m  console.log(`${colors.blue}============================================${colors.reset}`);·[39m
+    [31m  console.log(`${colors.blue}Werkout.in Stability Test${colors.reset}`);·[39m
+    [31m  console.log(`${colors.blue}============================================${colors.reset}`);·····[39m
+    [31m  // Check environment files·[39m
+    [31m  if (!checkEnvFiles()) {·[39m
+    [31m    console.log(`${colors.red}✗ Environment files check failed${colors.reset}`);·[39m
+    [31m    process.exit(1);·[39m
+    [31m  }·····[39m
+    [31m  // Test backend·[39m
+    [31m  const backendSuccess = await testBackend();·····[39m
+    [31m  // Test frontend·[39m
+    [31m  const frontendSuccess = await testFrontend();·····[39m
+    [31m  // Final results·[39m
+    [31m  console.log(`${colors.blue}============================================${colors.reset}`);·[39m
+    [31m  console.log(`${colors.blue}Test Results:${colors.reset}`);·[39m
+    [31m  console.log(`${colors.blue}============================================${colors.reset}`);·[39m
+    [31m  console.log(`Backend: ${backendSuccess ? colors.green + 'PASS' : colors.red + 'FAIL'}${colors.reset}`);·[39m
+    [31m  console.log(`Frontend: ${frontendSuccess ? colors.green + 'PASS' : colors.red + 'FAIL'}${colors.reset}`);·[39m
+    [31m  console.log(`Overall: ${backendSuccess && frontendSuccess ? colors.green + 'PASS' : colors.red + 'FAIL'}${colors.reset}`);·····[39m
+    [31m  if (backendSuccess && frontendSuccess) {·[39m
+    [31m    console.log(`${colors.green}✓ Stability test completed successfully!${colors.reset}`);·[39m
+    [31m    process.exit(0);·[39m
+    [31m  } else {·[39m
+    [31m    console.log(`${colors.red}✗ Stability test failed${colors.reset}`);·[39m
+    [31m    process.exit(1);·[39m
+    [31m  }·[39m
+    [31m}···[39m
+    [31m// Run the main function·[39m
+    [31mmain().catch(error => {·[39m
+    [31m  console.error(`${colors.red}An unexpected error occurred:${colors.reset}`, error);·[39m
+    [31m  process.exit(1);·[39m
+    [31m}); "[39m
+[2m[22m
+[2m    [0m [90m 41 |[39m     [22m
+[2m     [90m 42 |[39m     [90m// Check for key functions[39m[22m
+[2m    [31m[1m>[22m[2m[39m[90m 43 |[39m     expect(scriptContent)[33m.[39mtoContain([32m'function checkServer'[39m)[33m;[39m[22m
+[2m     [90m    |[39m                           [31m[1m^[22m[2m[39m[22m
+[2m     [90m 44 |[39m     expect(scriptContent)[33m.[39mtoContain([32m'function testBackend'[39m)[33m;[39m[22m
+[2m     [90m 45 |[39m     expect(scriptContent)[33m.[39mtoContain([32m'function testFrontend'[39m)[33m;[39m[22m
+[2m     [90m 46 |[39m     expect(scriptContent)[33m.[39mtoContain([32m'function main'[39m)[33m;[39m[0m[22m
+[2m[22m
+[2m      [2mat Object.toContain ([22m[2m[0m[36mtests/unit/stability.test.js[39m[0m[2m:43:27)[22m[2m[22m
+
+[0m[7m[1m[31m FAIL [39m[22m[27m[0m [2mtests/unit/backend/[22m[1mauth.middleware.test.js[22m
+  [1m● [22mTest suite failed to run
+
+    Cannot find module 'jsonwebtoken' from 'tests/unit/backend/auth.middleware.test.js'
+
+    [0m[31m[1m>[22m[39m[90m 1 |[39m [36mconst[39m jwt [33m=[39m require([32m'jsonwebtoken'[39m)[33m;[39m
+     [90m   |[39m                                    [31m[1m^[22m[39m
+     [90m 2 |[39m [36mconst[39m { protect } [33m=[39m require([32m'../../../src/backend/src/middleware/auth.middleware'[39m)[33m;[39m
+     [90m 3 |[39m
+     [90m 4 |[39m [90m// Mock the next function[39m[0m
+
+      [2mat Resolver._throwModNotFoundError ([22mnode_modules/jest-resolve/build/resolver.js[2m:427:11)[22m
+      [2mat Object.<anonymous> ([22m[0m[36mtests/unit/backend/auth.middleware.test.js[39m[0m[2m:1:36)[22m
+
+[0m[7m[1m[31m FAIL [39m[22m[27m[0m [2mtests/unit/backend/[22m[1mSeekerProfile.model.test.js[22m
+  [1m● [22mTest suite failed to run
+
+    Cannot find module 'mongoose' from 'tests/unit/backend/SeekerProfile.model.test.js'
+
+    [0m[31m[1m>[22m[39m[90m 1 |[39m [36mconst[39m mongoose [33m=[39m require([32m'mongoose'[39m)[33m;[39m
+     [90m   |[39m                                     [31m[1m^[22m[39m
+     [90m 2 |[39m [36mconst[39m [33mSeekerProfile[39m [33m=[39m require([32m'../../../src/backend/src/models/SeekerProfile.model'[39m)[33m;[39m
+     [90m 3 |[39m [36mconst[39m [33mTestLogger[39m [33m=[39m require([32m'../../utils/testLogger'[39m)[33m;[39m
+     [90m 4 |[39m[0m
+
+      [2mat Resolver._throwModNotFoundError ([22mnode_modules/jest-resolve/build/resolver.js[2m:427:11)[22m
+      [2mat Object.<anonymous> ([22m[0m[36mtests/unit/backend/SeekerProfile.model.test.js[39m[0m[2m:1:37)[22m
+
+[0m[7m[1m[31m FAIL [39m[22m[27m[0m [2mtests/unit/backend/[22m[1mhealth.endpoint.test.js[22m
+  [1m● [22mTest suite failed to run
+
+    Cannot find module 'express' from 'tests/unit/backend/health.endpoint.test.js'
+
+    [0m [90m 1 |[39m [36mconst[39m request [33m=[39m require([32m'supertest'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 2 |[39m [36mconst[39m express [33m=[39m require([32m'express'[39m)[33m;[39m
+     [90m   |[39m                 [31m[1m^[22m[39m
+     [90m 3 |[39m [36mconst[39m app [33m=[39m express()[33m;[39m
+     [90m 4 |[39m
+     [90m 5 |[39m [90m// Mock the logger to prevent test output pollution[39m[0m
+
+      [2mat Resolver._throwModNotFoundError ([22mnode_modules/jest-resolve/build/resolver.js[2m:427:11)[22m
+      [2mat Object.require ([22m[0m[36mtests/unit/backend/health.endpoint.test.js[39m[0m[2m:2:17)[22m
+
+[1mTest Suites: [22m[1m[31m5 failed[39m[22m, 5 total
+[1mTests:       [22m[1m[31m1 failed[39m[22m, [1m[32m2 passed[39m[22m, 3 total
+[1mSnapshots:   [22m0 total
+[1mTime:[22m        14.304 s
+[2mRan all test suites[22m[2m.[22m
+
+    at genericNodeError (node:internal/errors:983:15)
+    at wrappedFn (node:internal/errors:537:14)
+    at checkExecSyncError (node:child_process:882:11)
+    at execSync (node:child_process:954:15)
+    at runTests (D:\PROJECTS\werkout\workspace\tests\runTests.js:21:20)
+    at Object.<anonymous> (D:\PROJECTS\werkout\workspace\tests\runTests.js:68:19)
+    at Module._compile (node:internal/modules/cjs/loader:1734:14)
+    at Object..js (node:internal/modules/cjs/loader:1899:10)
+    at Module.load (node:internal/modules/cjs/loader:1469:32)
+    at Function._load (node:internal/modules/cjs/loader:1286:12)
+[2025-04-01T11:50:34.934Z] [RESULT] [31m  Invalid testPattern 'unit\\**\\*.test.js' supplied. Running all tests instead.[39m
+[31m  Invalid testPattern 'unit\\**\\*.test.js' supplied. Running all tests instead.[39m
+
+
+Test FAILED
+Completed at: 2025-04-01T11:50:34.934Z
+=== END TEST LOG ===

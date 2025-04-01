@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 30
+    },
+    "auditLog": "D:\\PROJECTS\\werkout\\workspace\\logs\\backend\\errors\\.9c172d56a39757d05c54e65d2025be6badd23a90-audit.json",
+    "files": [
+        {
+            "date": 1743507947136,
+            "name": "D:\\PROJECTS\\werkout\\workspace\\logs\\backend\\errors\\error-2025-04-01.log",
+            "hash": "d55500a2ef8860d906e310346481ea6142913636780e23bce83c58e38f53c78b"
+        }
+    ],
+    "hashType": "sha256"
+}

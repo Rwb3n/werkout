@@ -1,0 +1,29 @@
+{
+  "name": "werkout-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Monorepo for the Werkout.in platform",
+  "scripts": {
+    "test:stability": "node scripts/test-stability.js",
+    "test:error-logging": "node tests/utils/test-error-logging.js",
+    "start:backend": "cd src/backend && npm run dev",
+    "start:frontend": "cd src/frontend && npm run dev",
+    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
+    "setup": "node scripts/setup.js",
+    "setup:logs": "node tests/utils/createLogStructure.js",
+    "test": "node tests/runTests.js",
+    "test:unit": "node tests/runTests.js 'unit/**/*.test.js'",
+    "test:with-logs": "cross-env TEST_VERBOSE=true node tests/runTests.js"
+  },
+  "dependencies": {
+    "node-fetch": "^2.6.9",
+    "concurrently": "^8.0.1",
+    "cross-env": "^7.0.3",
+    "winston": "^3.10.0",
+    "winston-daily-rotate-file": "^4.7.1"
+  },
+  "devDependencies": {
+    "jest": "^29.5.0",
+    "supertest": "^6.3.3"
+  }
+} 
