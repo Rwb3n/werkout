@@ -277,6 +277,8 @@ RULE_ERR_HANDLE_GENERAL_01:
 *   `[TIMESTAMP]` Recommended checking tsconfig.json and clearing Vercel build cache.
 *   `[TIMESTAMP]` User confirmed build failed even WITHOUT Vercel cache.
 *   `[TIMESTAMP]` Re-evaluating API route signature based on Page component examples.
+*   `[TIMESTAMP]` Identified root issue: Vercel was using `.js` file extension with TypeScript syntax.
+*   `[TIMESTAMP]` Fixed by removing type annotations in `.js` file version and creating properly typed `.ts` version of the file.
 
 *Example:*
 *   `[2025-03-26 17:55:00] Initialized new session.`

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 // Minimal route handler for testing the signature
-// Using non-destructured second argument
+// Using non-destructured second argument with TypeScript type annotations
 export async function GET(
   request: Request, 
   context: { params: { providerId: string } }
