@@ -4,11 +4,15 @@ import User from '@/models/User';
 import ProviderProfile from '@/models/ProviderProfile';
 import mongoose from 'mongoose'; // Import mongoose to validate ObjectId
 
+// Define the expected shape of the params object passed in the context
+interface RouteContext {
+  params: {
+    providerId: string;
+  }
+}
+
 // Note: No auth() check here, this is a public endpoint
-export async function GET(
-    request: Request, 
-    context: { params: { providerId: string } } // Use this type for the second argument
-) {
+export async function GET(request: Request, context: RouteContext) {
   const { providerId } = context.params; // Destructure from context.params
 
   // Validate the providerId format
