@@ -1,9 +1,5 @@
 import { NextResponse } from 'next/server';
-import { auth, clerkClient as clerkClientFactory } from '@clerk/nextjs/server';
-import connectDb from '@/lib/db';
-import User from '@/models/User';
-import Connection from '@/models/Connection';
-import mongoose from 'mongoose';
+import { auth } from '@clerk/nextjs/server';
 
 /**
  * GET /api/connections

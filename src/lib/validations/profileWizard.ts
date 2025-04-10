@@ -1,11 +1,12 @@
 import * as z from "zod";
-import { isValidPhoneNumber } from 'react-phone-number-input/input'
+// isValidPhoneNumber import removed as unused
+// import { isValidPhoneNumber } from 'react-phone-number-input/input'
+
+// MAX_ARRAY_LENGTH import removed as unused
+// const MAX_ARRAY_LENGTH = 5;
 
 // Define constants or fetch from a config/API if they change often
-const MAX_ARRAY_LENGTH = 5;
-// GOALS_INTERESTS removed as unused
 // const GOALS_INTERESTS = ["Lose Weight", "Build Muscle", "Improve Endurance", "Learn New Skill", "Stay Active"];
-// SPECIALTIES removed as unused
 // const SPECIALTIES = ["Weight Loss", "Strength Training", "Yoga", "Pilates", "Running Coach", "Nutrition"];
 
 // TODO: Define actual lists for multi-select/tags/radio

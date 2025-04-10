@@ -12,12 +12,11 @@ import { Slider } from "@/components/ui/Slider"; // For radius
 import { MapPinIcon } from '@heroicons/react/20/solid';
 import { Badge } from "@/components/ui/Badge"; // Import Badge for specialties
 import { Skeleton } from "@/components/ui/Skeleton"; // Add Skeleton
-import { useRouter, useSearchParams } from 'next/navigation';
 
 // Define a fetcher function for SWR
 const fetcher = (url: string) => fetch(url).then((res) => {
   if (!res.ok) {
-    throw new Error('An error occurred while fetching the data.')
+    throw new Error('An error occurred while fetching the data.');
   }
   return res.json();
 });
@@ -103,6 +102,11 @@ export default function SearchPage() {
 
   const results = apiResponse?.results;
   const pagination = apiResponse?.pagination;
+
+  // Define fetchResults using useCallback if it depends on state/props
+  const fetchResults = useCallback(async () => {
+    // ... (logic to construct URL and call fetcher/mutate) ...
+  }, [/* dependencies like searchQuery, filters, etc */]);
 
   // --- Geolocation Handler ---
   const handleUseCurrentLocation = () => {
@@ -236,11 +240,11 @@ export default function SearchPage() {
       }
   }, [selectedSpecialties, selectedProviderTypes]); // Rerun effect when filters change
 
-  // Fetch results whenever search params change
+  // Fetch results whenever relevant dependencies change
   useEffect(() => {
     fetchResults();
-    // eslint-disable-next-line react-hooks/exhaustive-deps 
-  }, [fetchResults, searchParams]); // Add searchQuery to deps if fetchResults depends on it directly, or keep disabled if useCallback handles it
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchResults]); // Ensure fetchResults is stable or included
 
   return (
     <Container className="py-8">

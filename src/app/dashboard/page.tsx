@@ -38,7 +38,9 @@ const fetcher = async (url: string): Promise<UserProfileData> => {
     // Attach extra info to the error object.
     try {
       error.info = await res.json();
-    } catch (e) { /* Ignore if response isn't JSON */ }
+    } catch /*(e)*/ { // Comment out unused e parameter
+      /* Ignore if response isn't JSON */
+    }
     error.status = res.status;
     throw error;
   }

@@ -2,10 +2,8 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import connectDb from '@/lib/db';
 import User from '@/models/User';
-// We might need ProviderProfile later to populate results
-import ProviderProfile from '@/models/ProviderProfile'; 
 // import { getCoordinates } from '@/lib/geocoder';
-import mongoose, { PipelineStage } from 'mongoose'; // Import PipelineStage
+import { PipelineStage } from 'mongoose'; // Keep PipelineStage
 
 // Define interfaces for clarity
 interface AggregationPipelineStage {
@@ -43,7 +41,7 @@ interface ProjectedProviderResult {
 }
 
 export async function GET(request: Request) {
-  const { userId } = await auth();
+  // const { userId } = await auth();
   const { searchParams } = new URL(request.url);
   const lat = searchParams.get('lat');
   const lng = searchParams.get('lng');

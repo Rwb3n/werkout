@@ -19,33 +19,30 @@ interface Step {
 
 interface MultiStepFormProps {
   steps: Step[];
-  onFinish: () => void; // Function to call when the last step is submitted
+  onFinish: (data: StepData) => void;
   // Pass additional props needed by step components
   // e.g., form instance from react-hook-form if managing state centrally
-  stepProps?: Record<string, any>; 
+  // stepProps?: Record<string, any>; 
   initialData?: StepData;
-  onSubmit: (data: StepData) => void;
+  // onSubmit: (data: StepData) => void;
 }
 
-export function MultiStepForm({ steps, onFinish, stepProps = {}, initialData = {}, onSubmit }: MultiStepFormProps) {
+export function MultiStepForm({ steps, onFinish }: MultiStepFormProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [formData, setFormData] = useState<StepData>(initialData);
+  // const [formData, setFormData] = useState<StepData>(initialData);
 
   const CurrentStepComponent = steps[currentStepIndex].component;
   const isFirstStep = currentStepIndex === 0;
   const isLastStep = currentStepIndex === steps.length - 1;
 
-  // Type the data parameter explicitly
-  const updateFormData = useCallback((data: Partial<StepData>) => {
-    setFormData(prev => ({ ...prev, ...data }));
-  }, []);
+  // const updateFormData = useCallback((data: Partial<StepData>) => {
+  //   setFormData(prev => ({ ...prev, ...data }));
+  // }, []);
 
   const goToNext = () => {
     // TODO: Add validation check before proceeding
     if (!isLastStep) {
       setCurrentStepIndex(prev => prev + 1);
-    } else {
-      onFinish(); // Call finish callback on the last step
     }
   };
 
@@ -66,13 +63,17 @@ export function MultiStepForm({ steps, onFinish, stepProps = {}, initialData = {
       </CardHeader>
       <CardContent>
         {/* Render the component for the current step */}
-        <CurrentStepComponent {...stepProps} />
+        <CurrentStepComponent /* updateFormData={updateFormData} formData={formData} */ />
       </CardContent>
       <CardFooter className="flex justify-between">
-        <Button variant="outline" onClick={goToPrevious} disabled={isFirstStep}>
-          Previous
-        </Button>
-        <Button onClick={goToNext}>
+        {!isFirstStep && (
+          <Button variant="outline" onClick={goToPrevious} disabled={isFirstStep}>
+            Previous
+          </Button>
+        )}
+        {/* Spacer to push the Next/Finish button to the right if Previous is hidden */}
+        {isFirstStep && <div />}
+        <Button onClick={isLastStep ? () => onFinish({}) : goToNext}>
           {isLastStep ? 'Finish' : 'Next'}
         </Button>
       </CardFooter>

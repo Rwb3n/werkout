@@ -48,7 +48,7 @@ export default function CreateProfilePage() {
         try {
           const errorData = await response.json();
           errorMsg = errorData.message || errorMsg;
-        } catch (parseError) {
+        } catch /*(parseError)*/ { // Comment out unused parseError
           // Ignore if error response is not JSON
         }
         throw new Error(errorMsg);
