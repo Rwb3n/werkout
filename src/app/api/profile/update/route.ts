@@ -115,7 +115,7 @@ export async function POST(request: Request) {
             userType, profileComplete: true, 
             city, state, country, address, fitnessLevel, goals, preferences, healthConditions, 
             bio, specialties, certifications, yearsOfExperience, servicesOffered, availability, responseTime, websiteUrl 
-        }).filter(([_, v]) => v !== undefined)
+        }).filter(([/* _ */, v]) => v !== undefined)
     );
     
     // Await the Clerk client promise before accessing its methods
@@ -208,9 +208,7 @@ export async function POST(request: Request) {
     }
 
     // --- Step 6: Create/Update Specific Profile Document ---
-    let profileUpserted = false;
     if (Object.keys(profileSpecificData).length > 0) {
-      profileUpserted = true;
       const profileUpdateOptions: mongoose.QueryOptions = { upsert: true, new: true, setDefaultsOnInsert: true };
       if (userType === 'seeker') {
         await SeekerProfile.findOneAndUpdate(

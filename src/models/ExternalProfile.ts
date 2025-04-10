@@ -9,7 +9,7 @@ export interface IExternalProfile extends Document {
   refreshToken?: string; // Encrypted refresh token (if applicable)
   expiresAt?: Date; // Token expiry date
   scopes?: string[]; // Scopes granted by the user
-  profileData?: Record<string, any>; // Store basic profile info from the provider (e.g., name, picture)
+  profileData?: Record<string, unknown>; // Use unknown instead of any
   lastSync?: Date; // Timestamp of the last data synchronization
   createdAt: Date;
   updatedAt: Date;
@@ -29,7 +29,7 @@ const ExternalProfileSchema: Schema<IExternalProfile> = new Schema(
     refreshToken: { type: String }, // Should be encrypted before saving
     expiresAt: { type: Date },
     scopes: [{ type: String }],
-    profileData: { type: Schema.Types.Mixed }, // Store arbitrary JSON data from provider
+    profileData: { type: Schema.Types.Mixed }, // Keep Mixed for Mongoose flexibility
     lastSync: { type: Date },
     // Composite unique index to ensure a user can only link one account per provider
     // index: { userId: 1, provider: 1 }, { unique: true } // Add this if needed

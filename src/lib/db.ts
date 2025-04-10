@@ -8,6 +8,9 @@ interface MongooseCache {
 
 // Augment the NodeJS global type to declare the mongoose property
 declare global {
+  // Use 'let' or 'const' if module scope allows, otherwise keep 'var' for global augmentation
+  // Using 'var' is generally required for global augmentation like this.
+  // eslint-disable-next-line no-var
   var mongoose: MongooseCache | undefined;
 }
 

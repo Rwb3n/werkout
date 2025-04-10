@@ -6,11 +6,7 @@ import User from '@/models/User';
 import { PipelineStage } from 'mongoose'; // Keep PipelineStage
 
 // Define interfaces for clarity
-// Removed unused interface: AggregationPipelineStage
-
-interface LocationFilter {
-  $geoWithin?: { $centerSphere: [[number, number], number] };
-}
+// Removed unused interface: LocationFilter
 
 // Removed unused interface: UserQuery
 // Removed unused interface: ProviderProfileQuery
