@@ -4,15 +4,12 @@ import User from '@/models/User';
 import ProviderProfile from '@/models/ProviderProfile';
 import mongoose from 'mongoose'; // Import mongoose to validate ObjectId
 
-interface RouteParams {
-  params: { 
-    providerId: string 
-  }
-}
-
 // Note: No auth() check here, this is a public endpoint
-export async function GET(request: Request, { params }: RouteParams ) {
-  const { providerId } = params;
+export async function GET(
+    request: Request, 
+    context: { params: { providerId: string } } // Use this type for the second argument
+) {
+  const { providerId } = context.params; // Destructure from context.params
 
   // Validate the providerId format
   if (!mongoose.Types.ObjectId.isValid(providerId)) {
