@@ -4,16 +4,22 @@ import User from '@/models/User';
 import ProviderProfile from '@/models/ProviderProfile';
 import mongoose from 'mongoose'; // Import mongoose to validate ObjectId
 
-// Define the expected shape of the params object passed in the context
+// Remove the RouteContext interface
+/*
 interface RouteContext {
   params: {
     providerId: string;
   }
 }
+*/
 
 // Note: No auth() check here, this is a public endpoint
-export async function GET(request: Request, context: RouteContext) {
-  const { providerId } = context.params; // Destructure from context.params
+// Directly type the params property within the second argument
+export async function GET(
+  request: Request, 
+  { params }: { params: { providerId: string } }
+) {
+  const { providerId } = params; // Destructure directly from params
 
   // Validate the providerId format
   if (!mongoose.Types.ObjectId.isValid(providerId)) {
