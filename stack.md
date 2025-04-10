@@ -9,7 +9,7 @@ Form Handling: React Hook Form + Zod (performance-focused with type safety)
 
 Backend
 
-Framework: Node.js + Express (JavaScript consistency across stack)
+Framework: Node.js (via Next.js API Routes)
 Database: MongoDB (flexible schema ideal for evolving requirements)
 Authentication: Clerk (managed service for user management and authentication flows)
 File Storage: AWS S3 (reliable cloud storage for media)
@@ -17,7 +17,7 @@ File Storage: AWS S3 (reliable cloud storage for media)
 Deployment
 
 Frontend: Vercel (optimized for Next.js)
-Backend: AWS Elastic Beanstalk (scalable with reasonable operational overhead)
+Backend: Vercel (Next.js API Routes deployed alongside frontend)
 CI/CD: GitHub Actions (tight integration with code repository)
 
 Implementation Strategy
@@ -32,9 +32,9 @@ This provides the visual foundation for all subsequent development
 
 Develop Authentication & User Profiles
 
-Implement registration/login interfaces
+Implement registration/login interfaces (using Clerk)
 Build profile creation flows for both fitness seekers and providers
-Set up JWT authentication backend
+Set up Clerk authentication and integrate with Next.js
 Create user database models and API endpoints
 This establishes the identity framework for the platform
 

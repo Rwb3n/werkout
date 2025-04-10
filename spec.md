@@ -15,56 +15,94 @@ This system serves as a connection layer between fitness seekers and providers (
 
 ```mermaid
 classDiagram
-    User <|-- Seeker
-    User <|-- Provider
-    Provider "1" --> "*" Service
-    Provider "1" --> "*" Event
-    Provider "1" --> "*" Group
-    Seeker "*" --> "*" Provider : connects
-    Seeker "*" --> "*" Event : attends
-    Seeker "*" --> "*" Group : joins
+    User <|-- SeekerProfile : links via userId
+    User <|-- ProviderProfile : links via userId
     User "1" --> "*" ExternalProfile
+    // Simplified diagram focusing on implemented models
+    // Removed Service, Event, Group, Connection for now
     
     class User {
-        +String id
+        +String _id (MongoDB ObjectId)
+        +String clerkId
         +String email
-        +String passwordHash
-        +String firstName
-        +String lastName
-        +Location location
-        +ContactPreferences contactPrefs
-        +createUser()
-        +updateProfile()
-        +authenticate()
+        +String firstName?
+        +String lastName?
+        +String profileImageUrl?
+        +UserType userType?
+        +Boolean profileComplete
+        +Boolean isActive
+        +Location location?
+        +Date createdAt
+        +Date updatedAt
+        // Methods handled by Clerk/API routes
     }
     
-    class Seeker {
-        +FitnessLevel level
-        +String[] goals
-        +String[] interests
-        +Milestone[] journey
-        +searchProviders()
-        +connectWithProvider()
-        +trackProgress()
+    class SeekerProfile {
+        +String _id
+        +ObjectId userId
+        +String[] goals?
+        +FitnessLevel fitnessLevel?
+        +String preferences?
+        +String healthConditions?
+        +Date createdAt
+        +Date updatedAt
     }
     
-    class Provider {
-        +String[] specialties
-        +Credential[] credentials
-        +Service[] services
-        +AvailabilitySchedule schedule
-        +createService()
-        +updateAvailability()
-        +createEvent()
+    class ProviderProfile {
+        +String _id
+        +ObjectId userId
+        +String bio?
+        +String[] specialties?
+        +String[] certifications?
+        +Number yearsOfExperience?
+        +String[] servicesOffered?
+        +String availability?
+        +ResponseTime responseTime?
+        +String websiteUrl?
+        +Date createdAt
+        +Date updatedAt
     }
     
     class ExternalProfile {
-        +PlatformType platform
-        +String profileUrl
-        +String username
-        +AuthStatus authStatus
-        +connectProfile()
-        +syncContent()
+        +String _id
+        +ObjectId userId
+        +String provider // e.g., strava
+        +String providerUserId
+        +String accessToken // Encrypted
+        +String refreshToken? // Encrypted
+        +Date expiresAt?
+        +String[] scopes?
+        +Object profileData?
+        +Date lastSync?
+        +Date createdAt
+        +Date updatedAt
+    }
+
+    class Location { <<DataType>>
+      type: "Point"
+      coordinates: [Number, Number]
+      address?: String
+      city?: String
+      state?: String
+      country?: String
+    }
+    
+    enum UserType {
+        Seeker
+        Provider
+    }
+    
+    enum FitnessLevel {
+        Beginner
+        Intermediate
+        Advanced
+    }
+
+    enum ResponseTime {
+        WithinHour
+        WithinFewHours
+        Within24Hours
+        MoreThan24Hours
     }
 ```
 
@@ -77,63 +115,53 @@ classDiagram
   "high_priority": [
     {
       "id": "FR-1",
-      "name": "User Registration",
-      "description": "System must allow users to register as either Seekers or Providers",
+      "name": "User Registration & Onboarding",
+      "description": "System must allow users to register via Clerk, select a user type (Seeker/Provider), and complete a basic profile wizard.",
       "acceptance_criteria": [
-        "Email verification is required",
-        "Password must meet complexity requirements",
-        "Basic profile information must be collected"
+        "Clerk handles email/password and social sign-up/sign-in.",
+        "User must select Seeker or Provider after initial sign-up.",
+        "Multi-step wizard collects necessary profile information based on user type.",
+        "User record created/updated in DB upon wizard completion.",
+        "Clerk metadata (userType, profileComplete) updated."
       ],
-      "related_apis": ["POST /api/auth/register"]
+      "related_apis": ["/api/profile/set-type", "/api/profile/update"]
     },
     {
       "id": "FR-2",
-      "name": "External Platform Integration",
-      "description": "Users must be able to connect their profiles from external platforms",
-      "platforms": ["Instagram", "TikTok", "Strava", "YouTube"],
+      "name": "External Platform Integration (Strava)",
+      "description": "Users must be able to connect their Strava account.",
       "acceptance_criteria": [
-        "OAuth authentication where available",
-        "Profile content preview within the platform",
-        "Periodic synchronization of public content"
+        "OAuth authentication flow for Strava.",
+        "Store Strava tokens securely.",
+        "Fetch and display basic Strava profile info on dashboard."
       ],
-      "related_apis": ["POST /api/users/me/external-profiles"]
+      "related_apis": ["/api/oauth/strava", "/api/oauth/strava/callback"]
     },
     {
       "id": "FR-3",
-      "name": "Location-Based Search",
-      "description": "Seekers must be able to find Providers based on proximity and filters",
+      "name": "Location-Based Provider Search",
+      "description": "Seekers must be able to find Providers based on proximity and basic filters.",
       "acceptance_criteria": [
-        "Results must be sorted by distance by default",
-        "Maximum search radius configurable up to 50 miles",
-        "Filters must include specialties, availability, and provider type"
+        "Search based on user-provided location (lat/lng) and radius.",
+        "Results are paginated.",
+        "Filters for specialties implemented."
+        // "Results must be sorted by distance by default" - Implicit via geoNear/geoWithin
       ],
       "related_apis": ["GET /api/search"]
     },
     {
       "id": "FR-4",
-      "name": "Provider Profiles",
-      "description": "Providers must have detailed profiles showcasing their services and credentials",
+      "name": "Provider Profiles (Public & Dashboard)",
+      "description": "Publicly viewable provider profiles and a private user dashboard.",
       "acceptance_criteria": [
-        "Contact methods prominently displayed",
-        "External content embedded or linked",
-        "Services and availability clearly listed"
+        "Dashboard displays current user's profile summary.",
+        "Dynamic route `/providers/[providerId]` displays public provider info.",
+        "Public profile includes bio, specialties, location (city/state), etc."
       ],
-      "related_apis": ["GET /api/providers/:id"]
+      "related_apis": ["GET /api/profile/me", "GET /api/providers/[providerId]"]
     }
   ],
-  "medium_priority": [
-    {
-      "id": "FR-5",
-      "name": "Event Management",
-      "description": "Providers must be able to create and manage events",
-      "acceptance_criteria": [
-        "Location-based discovery of events",
-        "Calendar integration options",
-        "Attendee management"
-      ],
-      "related_apis": ["POST /api/events", "GET /api/events"]
-    }
-  ]
+  "medium_priority": [] // Event Management deferred
 }
 ```
 
@@ -148,14 +176,14 @@ classDiagram
     "concurrent_users": "Support for 5,000 concurrent users in MVP"
   },
   "scalability": {
-    "horizontal_scaling": "All components must support horizontal scaling",
+    "horizontal_scaling": "Vercel handles frontend/API scaling; MongoDB Atlas handles DB scaling.", // Adjusted
     "database_sharding": "MongoDB collections designed with future sharding in mind",
     "growth_projection": "Architecture must support 10x growth without major refactoring"
   },
   "security": {
-    "authentication": "Managed via Clerk (handles sign-up, sign-in, session management, MFA)",
-    "data_protection": "PII encrypted at rest and in transit",
-    "api_security": "Rate limiting, CORS protection, input validation",
+    "authentication": "Managed via Clerk (handles sign-up, sign-in, session management, MFA)", // Confirmed
+    "data_protection": "PII encrypted at rest and in transit; Secure token storage needed for ExternalProfile.", // Adjusted
+    "api_security": "Clerk middleware for auth; Rate limiting, CORS protection, input validation needed.", // Adjusted
     "compliance": "GDPR-ready data storage and processing"
   },
   "reliability": {
@@ -173,66 +201,43 @@ classDiagram
 ```yaml
 components:
   client_application:
-    type: Next.js React Application
+    type: Next.js React Application (including API Routes)
     deployment: Vercel
     key_features:
-      - Server-side rendering for SEO and initial load performance
-      - Client-side routing for seamless transitions
-      - Static generation for content-heavy pages
-      - Responsive design using Tailwind CSS
-      - Progressive enhancement for core functionality
+      - Server Components & Client Components
+      - App Router for routing
+      - API Routes for backend logic
+      - Tailwind CSS, SWR, React Hook Form, Zod
     critical_path_components:
-      - Authentication flows
-      - Search interface
-      - Provider profiles
-      - External content embedding
+      - Authentication flows (Clerk integration)
+      - Onboarding Wizard
+      - Search interface & results
+      - Dashboard & Public Profiles
+      - External Connection UI (Strava)
   
-  api_server:
-    type: Node.js Express Application
-    deployment: AWS Elastic Beanstalk
-    key_features:
-      - RESTful API design
-      - JWT authentication
-      - Middleware for validation and authorization
-      - Structured error handling
-      - Request logging and monitoring
-    critical_path_services:
-      - Authentication service
-      - User service
-      - Search service
-      - Provider service
-      - External integration service
+  # api_server removed - integrated into Next.js app
   
   database:
     type: MongoDB
     deployment: MongoDB Atlas (M10 or equivalent)
     key_features:
-      - Geospatial indexing for location queries
-      - Compound indexes for common query patterns
-      - Time-series collections for analytics
-      - Aggregation pipeline for complex queries
+      - Mongoose ODM
+      - Geospatial indexing
+      - Aggregation pipeline
     critical_collections:
       - users
-      - provider_profiles
-      - seeker_profiles
-      - services
-      - events
-      - external_profiles
+      - providerprofiles
+      - seekerprofiles
+      - externalprofiles
+      # Removed services, events, groups for now
   
   external_integrations:
     platforms:
-      - instagram:
-          auth_method: OAuth
-          data_access: Basic Display API
-          content_types: [Images, Videos, Profile]
       - strava:
           auth_method: OAuth 2.0
           data_access: API v3
-          content_types: [Activities, Routes, Profile]
-      - tiktok:
-          auth_method: OAuth
-          data_access: Content API
-          content_types: [Videos, Profile]
+          status: Implemented (basic connection & sync)
+      # Other platforms deferred
 ```
 
 ### 3.2 Data Schema
@@ -242,106 +247,102 @@ components:
   "users": {
     "collection_name": "users",
     "indexes": [
+      { "fields": { "clerkId": 1 }, "options": { "unique": true } },
       { "fields": { "email": 1 }, "options": { "unique": true } },
       { "fields": { "userType": 1 } },
       { "fields": { "location.coordinates": "2dsphere" } }
     ],
     "schema": {
-      "id": "ObjectId",
-      "email": { "type": "String", "validation": "email format", "required": true },
-      "passwordHash": { "type": "String", "required": true },
-      "firstName": { "type": "String", "required": true },
-      "lastName": { "type": "String", "required": true },
-      "userType": { "type": "String", "enum": ["seeker", "provider"], "required": true },
-      "location": {
-        "city": { "type": "String", "required": true },
-        "state": { "type": "String", "required": true },
-        "country": { "type": "String", "required": true },
-        "coordinates": {
-          "type": { "type": "String", "enum": ["Point"], "required": true },
-          "coordinates": { "type": "[Number]", "required": true }
-        }
-      },
-      "contactPreferences": {
-        "whatsapp": { "type": "Boolean", "default": false },
-        "email": { "type": "Boolean", "default": true },
-        "phone": { "type": "Boolean", "default": false }
-      },
-      "isVerified": { "type": "Boolean", "default": false },
+      "_id": "ObjectId",
+      "clerkId": { "type": "String", "required": true },
+      "email": { "type": "String", "required": true },
+      "firstName": { "type": "String" },
+      "lastName": { "type": "String" },
+      "profileImageUrl": { "type": "String" },
+      "userType": { "type": "String", "enum": ["seeker", "provider"] },
+      "profileComplete": { "type": "Boolean", "default": false },
       "isActive": { "type": "Boolean", "default": true },
-      "createdAt": { "type": "Date", "default": "currentDate" },
-      "updatedAt": { "type": "Date", "default": "currentDate" }
+      "location": { // Optional top-level location
+        "type": { "type": "String", "enum": ["Point"], "default": "Point" },
+        "coordinates": { "type": "[Number]", "required": true }, // [longitude, latitude]
+        "address": { "type": "String" },
+        "city": { "type": "String" }, // Added for simpler display?
+        "state": { "type": "String" }, // Added for simpler display?
+        "country": { "type": "String" } // Added for simpler display?
+      },
+      "createdAt": { "type": "Date", "auto": true },
+      "updatedAt": { "type": "Date", "auto": true }
     },
-    "validations": [
-      "Email must be unique",
-      "Passwords must be hashed before storage",
-      "Location coordinates must be valid GeoJSON point"
-    ],
     "relationships": [
-      { "collection": "seeker_profiles", "type": "1:1", "field": "userId" },
-      { "collection": "provider_profiles", "type": "1:1", "field": "userId" },
-      { "collection": "external_profiles", "type": "1:n", "field": "userId" }
+      { "collection": "seekerprofiles", "type": "1:1", "field": "userId" },
+      { "collection": "providerprofiles", "type": "1:1", "field": "userId" },
+      { "collection": "externalprofiles", "type": "1:n", "field": "userId" }
     ]
   },
   
-  "provider_profiles": {
-    "collection_name": "provider_profiles",
+  "providerprofiles": { // Note: collection names are often pluralized by Mongoose
+    "collection_name": "providerprofiles",
     "indexes": [
       { "fields": { "userId": 1 }, "options": { "unique": true } },
-      { "fields": { "specialties": 1 } },
-      { "fields": { "verificationStatus": 1 } }
+      { "fields": { "specialties": 1 } }
     ],
     "schema": {
-      "id": "ObjectId",
-      "userId": { "type": "ObjectId", "ref": "users", "required": true },
-      "bio": { "type": "String", "required": true },
-      "specialties": { "type": "[String]", "required": true },
-      "experience": { "type": "Number" },
-      "credentials": [{
-        "title": { "type": "String", "required": true },
-        "organization": { "type": "String", "required": true },
-        "year": { "type": "Number" },
-        "isVerified": { "type": "Boolean", "default": false }
-      }],
-      "services": [{
-        "title": { "type": "String", "required": true },
-        "description": { "type": "String", "required": true },
-        "type": { "type": "String", "enum": ["one-on-one", "group", "online", "other"] },
-        "isActive": { "type": "Boolean", "default": true }
-      }],
-      "languages": { "type": "[String]" },
-      "responseTime": { "type": "String" },
-      "providerType": { "type": "String", "enum": ["trainer", "coach", "group_leader", "gym", "studio"] },
-      "verificationStatus": { "type": "String", "enum": ["pending", "verified", "rejected"], "default": "pending" },
-      "createdAt": { "type": "Date", "default": "currentDate" },
-      "updatedAt": { "type": "Date", "default": "currentDate" }
+      "_id": "ObjectId",
+      "userId": { "type": "ObjectId", "ref": "User", "required": true },
+      "bio": { "type": "String", "maxlength": 1000 },
+      "specialties": { "type": "[String]", "trim": true },
+      "certifications": { "type": "[String]", "trim": true },
+      "yearsOfExperience": { "type": "Number", "min": 0 },
+      "servicesOffered": { "type": "[String]", "trim": true },
+      "availability": { "type": "String" }, // Simple text for now
+      "responseTime": { "type": "String", "enum": ["within_hour", "within_few_hours", "within_24_hours", "more_than_24_hours"] },
+      "websiteUrl": { "type": "String" },
+      "createdAt": { "type": "Date", "auto": true },
+      "updatedAt": { "type": "Date", "auto": true }
+    }
+  },
+
+  "seekerprofiles": {
+    "collection_name": "seekerprofiles",
+    "indexes": [
+      { "fields": { "userId": 1 }, "options": { "unique": true } }
+    ],
+    "schema": {
+        "_id": "ObjectId",
+        "userId": { "type": "ObjectId", "ref": "User", "required": true },
+        "goals": { "type": "[String]", "trim": true },
+        "fitnessLevel": { "type": "String", "enum": ["beginner", "intermediate", "advanced"] },
+        "preferences": { "type": "String", "maxlength": 500 },
+        "healthConditions": { "type": "String", "maxlength": 1000 },
+        "createdAt": { "type": "Date", "auto": true },
+        "updatedAt": { "type": "Date", "auto": true }
     }
   },
   
-  "external_profiles": {
-    "collection_name": "external_profiles",
+  "externalprofiles": {
+    "collection_name": "externalprofiles",
     "indexes": [
-      { "fields": { "userId": 1, "platform": 1 }, "options": { "unique": true } }
+      { "fields": { "userId": 1 } }, 
+      { "fields": { "provider": 1, "providerUserId": 1 } },
+      { "fields": { "userId": 1, "provider": 1 }, "options": { "unique": true } }
     ],
     "schema": {
-      "id": "ObjectId",
-      "userId": { "type": "ObjectId", "ref": "users", "required": true },
-      "platform": { "type": "String", "enum": ["instagram", "tiktok", "strava", "youtube"], "required": true },
-      "username": { "type": "String", "required": true },
-      "profileUrl": { "type": "String", "required": true },
-      "accessToken": { "type": "String" },
-      "refreshToken": { "type": "String" },
-      "tokenExpiry": { "type": "Date" },
-      "lastSyncedAt": { "type": "Date" },
-      "isActive": { "type": "Boolean", "default": true },
-      "metadata": { "type": "Object" },
-      "createdAt": { "type": "Date", "default": "currentDate" },
-      "updatedAt": { "type": "Date", "default": "currentDate" }
+      "_id": "ObjectId",
+      "userId": { "type": "ObjectId", "ref": "User", "required": true },
+      "provider": { "type": "String", "required": true }, // e.g., 'strava'
+      "providerUserId": { "type": "String", "required": true },
+      "accessToken": { "type": "String", "required": true }, // Needs encryption
+      "refreshToken": { "type": "String" }, // Needs encryption
+      "expiresAt": { "type": "Date" },
+      "scopes": { "type": "[String]" },
+      "profileData": { "type": "Object" },
+      "lastSync": { "type": "Date" },
+      "createdAt": { "type": "Date", "auto": true },
+      "updatedAt": { "type": "Date", "auto": true }
     },
     "validations": [
-      "A user can only connect one account per platform",
-      "Access tokens must be encrypted at rest",
-      "Expired tokens must trigger a refresh workflow"
+      "A user can only connect one account per provider",
+      "Access/refresh tokens must be encrypted before storage"
     ]
   }
 }
@@ -352,90 +353,68 @@ components:
 ```yaml
 openapi: 3.0.0
 info:
-  title: Werkout.in API
+  title: Werkout.in API (via Next.js API Routes)
   version: 1.0.0
   description: API for connecting fitness seekers with providers
 
 paths:
-  /api/auth/register:
-    post:
-      summary: Register a new user
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - email
-                - password
-                - firstName
-                - lastName
-                - userType
-              properties:
-                email:
-                  type: string
-                  format: email
-                password:
-                  type: string
-                  minLength: 8
-                firstName:
-                  type: string
-                lastName:
-                  type: string
-                userType:
-                  type: string
-                  enum: [seeker, provider]
-      responses:
-        '201':
-          description: User created successfully
-        '400':
-          description: Invalid input
-        '409':
-          description: Email already exists
-      performance:
-        expected_latency: < 500ms
-        rate_limit: 10 requests per minute per IP
-      security_considerations:
-        - Password must be hashed before storage
-        - Email verification flow must be triggered
-        - IP-based rate limiting to prevent abuse
-
-  /api/users/me/external-profiles:
-    post:
-      summary: Connect an external platform profile
+  /api/profile/me:
+    get:
+      summary: Get current user's profile details
       security:
-        - bearerAuth: []
+        - clerkAuth: [] # Indicates Clerk middleware handles auth
+      responses:
+        '200':
+          description: Combined user and profile data
+        '401':
+          description: Unauthorized
+        '404':
+          description: User profile not found
+
+  /api/profile/update:
+    post:
+      summary: Create or update user profile (after onboarding wizard)
+      security:
+        - clerkAuth: []
       requestBody:
         required: true
         content:
           application/json:
-            schema:
+            schema: 
+              # Define based on expected wizard payload
               type: object
-              required:
-                - platform
-                - code
               properties:
-                platform:
-                  type: string
-                  enum: [instagram, tiktok, strava, youtube]
-                code:
-                  type: string
-                  description: OAuth authorization code
+                 userType: { type: string, enum: [seeker, provider] }
+                 # ... other fields from wizard
       responses:
-        '201':
-          description: External profile connected successfully
+        '200':
+          description: Profile updated successfully
         '400':
           description: Invalid input
         '401':
           description: Unauthorized
-        '409':
-          description: Profile already connected
-      implementation_notes:
-        - Handles OAuth token exchange flow
-        - Stores access and refresh tokens securely
-        - Fetches and caches basic profile information
-        - Initiates background job for content synchronization
+
+  /api/profile/set-type:
+    post:
+      summary: Set the user type after initial Clerk signup
+      security:
+        - clerkAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userType]
+              properties:
+                userType: { type: string, enum: [seeker, provider] }
+      responses:
+        '200':
+          description: User type set successfully in Clerk metadata
+        '400':
+          description: Invalid input or user type already set
+        '401':
+          description: Unauthorized
 
   /api/search:
     get:
@@ -444,55 +423,82 @@ paths:
         - name: lat
           in: query
           required: true
-          schema:
-            type: number
+          schema: { type: number }
         - name: lng
           in: query
           required: true
-          schema:
-            type: number
-        - name: radius
+          schema: { type: number }
+        - name: radius # in miles
+          in: query
+          required: true
+          schema: { type: number }
+        - name: specialties # comma-separated
           in: query
           required: false
-          schema:
-            type: number
-            default: 10
-        - name: specialties
+          schema: { type: string }
+        # - name: providerType # comma-separated - Add if filter implemented
+        #   in: query
+        #   required: false
+        #   schema: { type: string }
+        - name: page
           in: query
           required: false
-          schema:
-            type: array
-            items:
-              type: string
-        - name: providerType
+          schema: { type: integer, default: 1 }
+        - name: limit
           in: query
           required: false
-          schema:
-            type: array
-            items:
-              type: string
+          schema: { type: integer, default: 10 }
       responses:
         '200':
-          description: Search results
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  results:
-                    type: array
-                    items:
-                      type: object
-                  pagination:
-                    type: object
-      performance:
-        expected_latency: < 1s for typical radius
-        optimization: Geospatial index on provider location
-      implementation_notes:
-        - Uses MongoDB geospatial queries for proximity search
-        - Applies post-query filtering for additional criteria
-        - Returns paginated results with distance calculation
-        - Includes basic provider information to minimize payload size
+          description: Search results with pagination
+        '400':
+          description: Invalid parameters
+
+  /api/providers/{providerId}:
+    get:
+      summary: Get public profile details for a specific provider
+      parameters:
+        - name: providerId
+          in: path
+          required: true
+          schema: { type: string } # MongoDB ObjectId
+      responses:
+        '200':
+          description: Provider public profile data
+        '404':
+          description: Provider not found
+
+  /api/oauth/strava:
+    get:
+      summary: Initiate Strava OAuth connection flow
+      security:
+        - clerkAuth: []
+      responses:
+        '302':
+          description: Redirects user to Strava authorization URL
+
+  /api/oauth/strava/callback:
+    get:
+      summary: Handle OAuth callback from Strava
+      # No direct security here, state parameter used for CSRF protection
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema: { type: string }
+        - name: state
+          in: query
+          required: true
+          schema: { type: string } # For CSRF check
+        - name: scope
+          in: query
+          required: false
+          schema: { type: string }
+      responses:
+        '302':
+          description: Redirects user back to dashboard/settings after success/failure
+        '400':
+          description: Invalid state or code
 ```
 
 ## 4. Integration Architecture
@@ -502,52 +508,29 @@ paths:
 ```yaml
 integration_patterns:
   - pattern_name: OAuth Authentication
-    applicable_platforms: [Instagram, Strava, TikTok, YouTube]
+    applicable_platforms: [Strava] # Only Strava implemented
     implementation:
       flow_type: Authorization Code
-      token_storage: Encrypted in database
-      refresh_strategy: Background worker before expiration
+      token_storage: Encrypted in ExternalProfile collection
+      refresh_strategy: Implemented (check before API calls / background job TBD)
       error_handling:
-        - Rate limit exceeded: Exponential backoff
-        - Invalid token: Trigger reauthorization
-        - Service unavailable: Graceful degradation
+        - Rate limit exceeded: Log and potentially notify user
+        - Invalid token: Trigger reauthorization flow
     
-  - pattern_name: Content Synchronization
-    applicable_platforms: [Instagram, TikTok, YouTube]
-    implementation:
-      sync_frequency: Once per 24 hours per platform
-      sync_strategy: Incremental updates only
-      content_storage:
-        metadata: MongoDB
-        content_references: MongoDB with links to original
-        media_caching: None (direct embedding from source)
-    
-  - pattern_name: Activity Integration
-    applicable_platforms: [Strava]
-    implementation:
-      webhook_subscription: For real-time updates
-      data_processing: Extract relevant fitness metrics
-      privacy_controls: Honor platform and user privacy settings
+  # Content Sync and Activity Integration patterns deferred/simplified
 ```
 
 ### 4.2 Component Interfaces
 
 ```mermaid
 graph TD
-    A[Client Application] -->|Authentication| B[Auth Service]
-    A -->|API Requests| C[API Gateway]
-    C -->|User Management| D[User Service]
-    C -->|Provider Operations| E[Provider Service]
-    C -->|Search| F[Search Service]
-    C -->|External Platforms| G[Integration Service]
-    
-    D -->|Read/Write| DB1[(User Database)]
-    E -->|Read/Write| DB2[(Provider Database)]
-    G -->|OAuth/API| H[External Platform APIs]
-    
-    F -->|Query| DB1
-    F -->|Query| DB2
+    A[Client Application (Next.js)] -->|Clerk Hooks/Components| Clerk[Clerk Frontend]
+    A -->|API Route Calls /api/...| A
+    A -->|DB Operations via Mongoose| DB[(MongoDB Atlas)]
+    A -->|OAuth Redirect/Callback| Strava[Strava API]
+    Clerk -->|Auth Checks| ClerkBackend[Clerk Backend]
 ```
+*Simplified diagram showing Next.js app handling UI, API, DB interaction, and OAuth flows, using Clerk for authentication.*
 
 ## 5. Implementation Guidelines
 
@@ -556,20 +539,20 @@ graph TD
 ```json
 {
   "frontend": {
-    "framework": "Next.js 13+",
+    "framework": "Next.js 15+ (App Router)", // Updated Version
     "language": "TypeScript",
     "state_management": "React Context + SWR",
-    "styling": "Tailwind CSS",
-    "component_library": "Custom components with Headless UI",
+    "styling": "Tailwind CSS + shadcn/ui", // Added shadcn/ui
+    "component_library": "shadcn/ui + Custom components", // Updated
     "form_handling": "React Hook Form + Zod"
   },
   "backend": {
-    "framework": "Express.js",
+    "framework": "Next.js API Routes", // Confirmed
     "language": "TypeScript",
     "api_style": "RESTful",
-    "authentication": "JWT with refresh tokens",
-    "validation": "Joi",
-    "logging": "Winston + Morgan"
+    "authentication": "Clerk", // Confirmed
+    "validation": "Zod (in API routes/forms)", // Updated
+    "logging": "console.log (for now)" // Updated
   },
   "database": {
     "primary": "MongoDB",
@@ -577,77 +560,52 @@ graph TD
     "indexes": "See schema definitions"
   },
   "external_services": {
-    "file_storage": "AWS S3",
-    "email": "SendGrid",
-    "maps": "Google Maps API",
-    "monitoring": "Datadog",
-    "error_tracking": "Sentry"
+    // "file_storage": "AWS S3", // Optional
+    // "email": "SendGrid", // Optional
+    "maps_geocoding": "node-geocoder (e.g., with OpenStreetMap or other provider)", // Added
+    // "monitoring": "Datadog", // Optional
+    // "error_tracking": "Sentry" // Optional
   },
   "deployment": {
-    "frontend": "Vercel",
-    "backend": "AWS Elastic Beanstalk",
+    "frontend_backend": "Vercel", // Combined
     "database": "MongoDB Atlas",
-    "ci_cd": "GitHub Actions"
+    "ci_cd": "GitHub Actions" // Optional
   }
 }
 ```
 
 ### 5.2 Authentication Flow
 
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant C as Client (Next.js)
-    participant Clerk as Clerk Frontend SDK / Components
-    participant ClerkBackend as Clerk Backend / API
+*(Diagram and notes already reflect Clerk usage)*
 
-    U->>C: Clicks Sign Up / Sign In
-    C->>Clerk: Renders Clerk's <SignUp/> or <SignIn/> component OR redirects to Clerk hosted pages
-    Clerk->>U: Displays Sign Up/In form (with options like email/pass, social, MFA)
-    U->>Clerk: Submits credentials / Completes OAuth flow
-    Clerk->>ClerkBackend: Verifies credentials / OAuth callback
-    ClerkBackend-->>Clerk: Issues session token / User data
-    Clerk->>C: Returns authenticated user state (e.g., via useUser() hook) / Handles redirect back to Client
-    C->>U: Displays authenticated state / dashboard
-```
-
-**Implementation Notes:**
-
-*   The Client application integrates Clerk's React SDK (`@clerk/nextjs`).
-*   UI components like `<SignUp/>`, `<SignIn/>`, `<UserButton/>`, and hooks like `useUser()`, `useAuth()` handle most of the frontend flow.
-*   Session management, token handling, security features (MFA, password policies), and email verification are managed by Clerk.
-*   Backend API routes can be protected using Clerk's middleware or helper functions to verify incoming requests.
-*   User profile data beyond basic authentication details (e.g., seeker/provider specific fields) will be stored in the application's database (MongoDB) and potentially linked via Clerk user IDs or stored in Clerk's user metadata.
-
-### 5.3 External Platform Integration Flow
+### 5.3 External Platform Integration Flow (Strava)
 
 ```mermaid
 sequenceDiagram
     participant U as User
-    participant C as Client
-    participant A as API Server
-    participant P as Platform API
-    participant D as Database
+    participant C as Client (Next.js Page)
+    participant API as Next.js API Route
+    participant Strava as Strava API
+    participant DB as Database
     
-    U->>C: Click "Connect Instagram"
-    C->>P: Redirect to Instagram OAuth
-    P->>U: Show authorization screen
-    U->>P: Authorize application
-    P->>C: Redirect with authorization code
-    C->>A: POST /api/users/me/external-profiles
-    A->>P: Exchange code for tokens
-    P->>A: Return access + refresh tokens
-    A->>D: Store connection details
-    A->>P: Fetch basic profile data
-    P->>A: Return profile data
-    A->>D: Store profile metadata
-    A->>C: Return success response
-    C->>U: Show success message
-    
-    note over A,D: Background job
-    A->>P: Fetch recent content metadata
-    P->>A: Return content data
-    A->>D: Store content references
+    U->>C: Click "Connect Strava"
+    C->>API: GET /api/oauth/strava
+    API->>Strava: Generate Auth URL
+    API-->>C: Redirect Response (302)
+    C->>Strava: Redirect User
+    Strava->>U: Show authorization screen
+    U->>Strava: Authorize application
+    Strava->>C: Redirect to /api/oauth/strava/callback?code=...&state=...
+    C->>API: GET /api/oauth/strava/callback?code=...&state=...
+    API->>API: Verify state parameter (CSRF)
+    API->>Strava: Exchange code for tokens
+    Strava->>API: Return access + refresh tokens, expiry
+    API->>DB: Store/Update ExternalProfile (tokens encrypted)
+    API->>Strava: Fetch basic profile data
+    Strava->>API: Return profile data
+    API->>DB: Update ExternalProfile metadata
+    API-->>C: Redirect Response (e.g., to /dashboard?strava=success)
+    C->>U: Show success message / updated dashboard
 ```
 
 ## 6. Critical Implementation Paths

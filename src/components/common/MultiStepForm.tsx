@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/Card';
 
 // Define the shape of the data for each step
-// Use specific types instead of 'any' if possible
+// Using unknown for better type safety than any
 interface StepData {
-  [key: string]: any; 
+  [key: string]: unknown; 
 }
 
 interface Step {

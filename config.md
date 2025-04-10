@@ -21,13 +21,13 @@ _For complete technology evaluation and rationale, see `/stack.md`_
 - **Frontend**: Next.js, TypeScript, Tailwind CSS  
 - **State Management**: React Context + SWR  
 - **Form Handling**: React Hook Form + Zod  
-- **Backend**: Node.js, Express, TypeScript  
+- **Backend**: Node.js (via Next.js API Routes), TypeScript  
 - **Database**: MongoDB with Mongoose  
-- **Authentication**: Clerk `when required, documentation provided for clerk or any other`
-- **Storage**: AWS S3  
-- **Deployment**: Vercel (frontend), AWS Elastic Beanstalk (backend)  
-- **CI/CD**: GitHub Actions  
-- **Testing**: Jest, React Testing Library, Cypress  
+- **Authentication**: Clerk  
+- **Storage**: AWS S3 (Planned/Optional)  
+- **Deployment**: Vercel (Frontend + API Routes), MongoDB Atlas  
+- **CI/CD**: GitHub Actions (Planned/Optional)  
+- **Testing**: Jest, React Testing Library, Cypress (Planned/Optional)  
 
 ---
 
@@ -35,13 +35,13 @@ _For complete technology evaluation and rationale, see `/stack.md`_
 
 _For implementation details and development workflow, see `/implementation.md`_
 
-- **Location Structure**: City-based routing with pattern `werkout.in/[city]` (e.g., `werkout.in/london`)  
-- **API Design**: RESTful endpoints with `/api/v1/[resource]` pattern  
+- **Location Structure**: City-based routing TBD; currently using Provider IDs.  
+- **API Design**: RESTful endpoints via Next.js API Routes (`/api/...`)  
 - **Geospatial Queries**: MongoDB geospatial indexing for proximity search  
-- **External Integration**: OAuth-based integration with social/fitness platforms  
-- **Authentication**: JWT with refresh token rotation  
-- **Code Organization**: Feature-based directory structure  
-- **Error Handling**: Structured error responses with consistent format  
+- **External Integration**: OAuth-based integration with social/fitness platforms (Strava implemented)  
+- **Authentication**: Managed via Clerk  
+- **Code Organization**: Standard Next.js `app` directory structure  
+- **Error Handling**: Structured error responses in API routes  
 - **Responsive Design**: Mobile-first approach with Tailwind breakpoints  
 
 ---

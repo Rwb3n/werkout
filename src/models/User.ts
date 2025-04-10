@@ -1,83 +1,69 @@
-// import mongoose, { Schema, Document, models, model } from 'mongoose'; // mongoose import removed
-import { Schema, Document, models, model } from 'mongoose';
+import mongoose, { Schema, Document, models, Model } from 'mongoose';
 
-// Interface defining the structure of the Location subdocument
-interface ILocation {
-  city: string;
-  state: string;
-  country: string;
-  coordinates: {
-    type: 'Point';
-    coordinates: [number, number]; // [longitude, latitude]
-  };
+// Enum definitions based on potential spec (adjust if spec differs)
+export enum UserType {
+  Seeker = 'seeker',
+  Provider = 'provider',
 }
 
-// Interface defining the structure of the ContactPreferences subdocument
-interface IContactPreferences {
-  whatsapp: boolean;
-  email: boolean;
-  phone: boolean;
+export enum LocationType {
+  Point = 'Point',
 }
 
-// Interface defining the structure of the User document
+// Interface for the User document
 export interface IUser extends Document {
-  clerkId: string; // Link to Clerk user ID
-  email: string;
-  firstName?: string; // Optional, might come from Clerk
-  lastName?: string;  // Optional, might come from Clerk
-  userType: 'seeker' | 'provider';
-  location: ILocation;
-  contactPreferences: IContactPreferences;
-  // isVerified: boolean; // Handled by Clerk
-  isActive: boolean;
+  clerkId: string; // From Clerk authentication
+  email: string; // From Clerk
+  firstName?: string; // Optional, from Clerk or profile
+  lastName?: string; // Optional, from Clerk or profile
+  profileImageUrl?: string; // Optional, from Clerk
+  userType?: UserType; // Set during onboarding
+  profileComplete: boolean; // Flag set after profile wizard completion
+  isActive: boolean; // For soft deletes or disabling accounts
+  location?: {
+    type: LocationType;
+    coordinates: [number, number]; // [longitude, latitude]
+    address?: string; // Optional: Full address
+  };
   createdAt: Date;
   updatedAt: Date;
-  // Add references to ProviderProfile/SeekerProfile later if needed
 }
 
-const LocationSchema = new Schema<ILocation>({
-  city: { type: String, required: true },
-  state: { type: String, required: true },
-  country: { type: String, required: true },
+const locationSchema = new Schema({
+  type: {
+    type: String,
+    enum: Object.values(LocationType),
+    default: LocationType.Point,
+  },
   coordinates: {
-    type: {
-      type: String,
-      enum: ['Point'],
-      required: true
-    },
-    coordinates: {
-      type: [Number], // [longitude, latitude]
-      required: true,
-      index: '2dsphere' // Create geospatial index
-    }
-  }
-}, { _id: false }); // Don't create a separate _id for the subdocument
-
-const ContactPreferencesSchema = new Schema<IContactPreferences>({
-  whatsapp: { type: Boolean, default: false },
-  email: { type: Boolean, default: true },
-  phone: { type: Boolean, default: false },
+    type: [Number], // [longitude, latitude]
+    required: true,
+    index: '2dsphere', // Geospatial index
+  },
+  address: { type: String }, // Optional full address string
 }, { _id: false });
 
-const UserSchema = new Schema<IUser>(
+const UserSchema: Schema<IUser> = new Schema(
   {
     clerkId: { type: String, required: true, unique: true, index: true },
-    email: { type: String, required: true, unique: true, lowercase: true }, // Ensure email is unique and stored consistently
+    email: { type: String, required: true, unique: true },
     firstName: { type: String },
     lastName: { type: String },
-    userType: { type: String, enum: ['seeker', 'provider'], required: true, index: true },
-    location: { type: LocationSchema, required: true },
-    contactPreferences: { type: ContactPreferencesSchema, required: true },
-    // passwordHash is managed by Clerk
-    // isVerified is managed by Clerk
+    profileImageUrl: { type: String },
+    userType: {
+      type: String,
+      enum: Object.values(UserType),
+    },
+    profileComplete: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },
+    location: { type: locationSchema }, // Embed the location subdocument
   },
   {
-    timestamps: true, // Automatically add createdAt and updatedAt fields
+    timestamps: true, // Adds createdAt and updatedAt automatically
   }
 );
 
-// Prevent model redefinition in hot-reload environments
-const User = models.User || model<IUser>('User', UserSchema);
+// Prevent model recompilation in Next.js dev environment
+const User: Model<IUser> = models.User || mongoose.model<IUser>('User', UserSchema);
 
 export default User; 

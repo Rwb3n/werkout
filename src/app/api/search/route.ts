@@ -1,43 +1,26 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+// import { auth } from '@clerk/nextjs/server';
 import connectDb from '@/lib/db';
 import User from '@/models/User';
 // import { getCoordinates } from '@/lib/geocoder';
 import { PipelineStage } from 'mongoose'; // Keep PipelineStage
 
 // Define interfaces for clarity
-interface AggregationPipelineStage {
-  [key: string]: any; // Define stage structure more specifically if possible
-}
+// Removed unused interface: AggregationPipelineStage
 
 interface LocationFilter {
   $geoWithin?: { $centerSphere: [[number, number], number] };
 }
 
-interface UserQuery {
-  userType: string;
-  location?: LocationFilter;
-  isActive: boolean;
-}
+// Removed unused interface: UserQuery
+// Removed unused interface: ProviderProfileQuery
+// Removed unused interface: ProjectedProviderResult
 
-interface ProviderProfileQuery {
-  specialties?: { $in: string[] };
-  providerType?: { $in: string[] };
-}
-
-// Define interface for the shape after projection
-interface ProjectedProviderResult {
-  _id: any; // or specific type like mongoose.Types.ObjectId
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  location?: any; // Define more specific location type if needed
-  userType?: string;
-  distance: number; // In meters from $geoNear
-  bio?: string;
-  specialties?: string[];
-  experience?: number;
-  providerType?: string;
+// More specific type for profile matching filter keys (based on usage)
+interface ProfileMatchFilter {
+  'providerProfileInfo.specialties'?: { $in: string[] };
+  'providerProfileInfo.providerType'?: { $in: string[] };
+  // Add other potential filter keys if necessary
 }
 
 export async function GET(request: Request) {
@@ -105,12 +88,13 @@ export async function GET(request: Request) {
     pipeline.push(unwindStage);
 
     // 4. Match based on ProviderProfile filters
-    const profileMatchFilter: Record<string, any> = {}; // Build the filter object
+    const profileMatchFilter: ProfileMatchFilter = {}; // Use the specific interface
     if (specialtiesParam) {
       profileMatchFilter['providerProfileInfo.specialties'] = { $in: specialtiesParam.split(',').map(s => s.trim()) };
     }
     if (providerTypesParam) {
-      profileMatchFilter['providerProfileInfo.providerType'] = { $in: providerTypesParam.split(',').map(t => t.trim()) };
+      // Ensure providerType exists in ProviderProfile model before uncommenting/using
+      // profileMatchFilter['providerProfileInfo.providerType'] = { $in: providerTypesParam.split(',').map(t => t.trim()) };
     }
     
     if (Object.keys(profileMatchFilter).length > 0) {
@@ -170,9 +154,13 @@ export async function GET(request: Request) {
       }
     });
 
-  } catch (error) {
+  } catch (error: unknown) { // Type error as unknown
     console.error("Error during provider search:", error);
-    const typedError = error as Error;
-    return new NextResponse(typedError.message || "Internal Server Error", { status: 500 });
+    // Type check the error before accessing properties
+    let errorMessage = "Internal Server Error";
+    if (error instanceof Error) {
+        errorMessage = error.message;
+    }
+    return new NextResponse(errorMessage, { status: 500 });
   }
 } 

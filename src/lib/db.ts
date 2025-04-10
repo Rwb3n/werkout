@@ -6,6 +6,11 @@ interface MongooseCache {
   promise: Promise<typeof mongoose> | null;
 }
 
+// Augment the NodeJS global type to declare the mongoose property
+declare global {
+  var mongoose: MongooseCache | undefined;
+}
+
 const MONGODB_URI = process.env.MONGODB_URI;
 
 if (!MONGODB_URI) {
@@ -19,11 +24,12 @@ if (!MONGODB_URI) {
  * in development. This prevents connections growing exponentially
  * during API Route usage.
  */
-// Use a type assertion for the global object, but assign the typed cache structure
-let cached: MongooseCache = (global as any).mongoose;
-
-if (!cached) {
-  cached = (global as any).mongoose = { conn: null, promise: null };
+// Initialize cached, ensuring it's always of type MongooseCache after this block
+let cached: MongooseCache;
+if (global.mongoose) {
+    cached = global.mongoose;
+} else {
+    cached = global.mongoose = { conn: null, promise: null };
 }
 
 async function connectDb(): Promise<typeof mongoose> { // Return mongoose instance

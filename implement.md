@@ -15,10 +15,11 @@
 - Implement basic profile creation wizard
 
 ### 1.3 Frontend Authentication Flows
-- Set up frontend authentication state management
-- Implement login, registration, and verification flows
-- Create protected route system
-- Build password recovery process
+- *(Implemented using Clerk during Phase 1)*
+- Set up frontend authentication state management (via Clerk hooks)
+- Implement login, registration flows (via Clerk components/routes)
+- Create protected route system (via Clerk middleware)
+// - Build password recovery process (Handled by Clerk)
 
 ## Phase 2: Core User Interfaces (Weeks 4-6)
 
@@ -42,51 +43,57 @@
 
 ## Phase 3: Backend Foundation (Weeks 7-9)
 
+- *(Note: Backend implemented as Next.js API Routes alongside Frontend)*
+
 ### 3.1 API Server Setup
-- Set up Express.js application structure
-- Implement middleware stack (authentication, validation, error handling)
-- Create database connection with Mongoose
-- Set up logging and monitoring
+- Set up Next.js API routes structure
+- Implement middleware (Clerk for auth, potentially others)
+- Create database connection utility (Mongoose)
+- Set up basic logging (console)
 
 ### 3.2 Authentication Service
-- Implement JWT authentication system
-- Create user registration endpoints
-- Build email verification system
-- Implement password management endpoints
+- *(Handled by Clerk integration)*
+// - Implement JWT authentication system
+// - Create user registration endpoints (handled by Clerk webhooks/lazy creation)
+// - Build email verification system (handled by Clerk)
+// - Implement password management endpoints (handled by Clerk)
 
 ### 3.3 User & Profile Services
-- Create user data management endpoints
-- Implement profile CRUD operations
-- Build credential verification system
-- Create service management endpoints
+- Create user/profile API endpoints (`/api/profile/me`, `/api/profile/update`, `/api/providers/[id]`)
+- Implement profile CRUD logic within API routes
+// - Build credential verification system (Deferred/Simplified)
+// - Create service management endpoints (Deferred/Simplified)
 
 ## Phase 4: Core Backend Features (Weeks 10-12)
 
+- *(Note: Backend implemented as Next.js API Routes)*
+
 ### 4.1 Search & Discovery Backend
-- Implement geospatial search functionality
-- Create filtering and sorting algorithms
-- Build efficient pagination system
-- Implement search analytics and caching
+- Implement geospatial search in `/api/search` endpoint
+- Create filtering logic in `/api/search`
+- Build pagination in `/api/search`
+// - Implement search analytics and caching (Optional/Skipped)
 
 ### 4.2 External Platform Integration
-- Implement OAuth flow handlers for each platform
-- Create token management and refresh system
-- Build content synchronization services
-- Implement platform-specific API clients
+- Implement OAuth flow handlers (Strava) in API routes (`/api/oauth/...`)
+- Create token storage/retrieval logic (using `ExternalProfile` model)
+- Build basic content synchronization service (Strava)
+// - Implement platform-specific API clients (Minimal for Strava)
 
 ### 4.3 Connection & Communication
-- Create connection management system
-- Implement messaging infrastructure
-- Build notification system
-- Create activity tracking
+- Create `Connection` model (Placeholder)
+- Implement placeholder API endpoints for connections
+// - Build notification system (Deferred)
+// - Create activity tracking (Deferred)
 
 ## Phase 5: Integration & Testing (Weeks 13-15)
 
 ### 5.1 Frontend-Backend Integration
-- Connect all frontend components to API endpoints
-- Implement error handling and loading states
-- Create offline fallbacks and retry mechanisms
-- Optimize data fetching patterns
+- *(Ongoing throughout development with API routes)*
+- Connect frontend components to implemented API endpoints
+- Implement error handling and loading states (SWR)
+// - Create offline fallbacks and retry mechanisms (Deferred)
+- Optimize data fetching patterns (SWR used)
 
 ### 5.2 Testing & Quality Assurance
 - Implement unit and integration tests

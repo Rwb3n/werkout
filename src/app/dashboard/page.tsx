@@ -34,14 +34,32 @@ interface UserProfileData {
 const fetcher = async (url: string): Promise<UserProfileData> => {
   const res = await fetch(url);
   if (!res.ok) {
-    const error = new Error('An error occurred while fetching the data.') as Error & { info?: any; status?: number };
-    // Attach extra info to the error object.
+    // Define a more specific error structure if possible, or use unknown
+    let errorInfo: unknown = null;
     try {
-      error.info = await res.json();
-    } catch /*(e)*/ { // Comment out unused e parameter
-      /* Ignore if response isn't JSON */
+      errorInfo = await res.json();
+    } catch {
+      // Ignore if response isn't JSON 
     }
-    error.status = res.status;
+
+    // Create a custom error class or add properties to a standard Error
+    class FetchError extends Error {
+        info: unknown;
+        status: number;
+        constructor(message: string, status: number, info: unknown) {
+            super(message);
+            this.name = 'FetchError';
+            this.status = status;
+            this.info = info;
+        }
+    }
+
+    const error = new FetchError(
+        'An error occurred while fetching the data.', 
+        res.status,
+        errorInfo
+    );
+
     throw error;
   }
   return res.json();

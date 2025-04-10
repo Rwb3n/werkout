@@ -1,53 +1,49 @@
-// import mongoose, { Schema, Document, models, model, Types } from 'mongoose'; // mongoose import removed
-import { Schema, Document, models, model, Types } from 'mongoose';
-
-// Define possible platforms
-type PlatformType = 'instagram' | 'tiktok' | 'strava' | 'youtube';
+import mongoose, { Schema, Document, models, Model, Types } from 'mongoose';
 
 // Interface for the ExternalProfile document
 export interface IExternalProfile extends Document {
   userId: Types.ObjectId; // Reference to the User model
-  platform: PlatformType;
-  username: string;
-  profileUrl: string;
-  accessToken?: string; // Store securely (consider encryption layer)
-  refreshToken?: string; // Store securely
-  tokenExpiry?: Date;
-  lastSyncedAt?: Date;
-  isActive: boolean;
-  metadata?: object; // For storing platform-specific profile details
+  provider: string; // e.g., 'strava', 'google', 'facebook'
+  providerUserId: string; // User ID from the external provider
+  accessToken: string; // Encrypted access token
+  refreshToken?: string; // Encrypted refresh token (if applicable)
+  expiresAt?: Date; // Token expiry date
+  scopes?: string[]; // Scopes granted by the user
+  profileData?: Record<string, any>; // Store basic profile info from the provider (e.g., name, picture)
+  lastSync?: Date; // Timestamp of the last data synchronization
   createdAt: Date;
   updatedAt: Date;
 }
 
-const ExternalProfileSchema = new Schema<IExternalProfile>(
+const ExternalProfileSchema: Schema<IExternalProfile> = new Schema(
   {
-    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-    platform: { 
-      type: String, 
-      enum: ['instagram', 'tiktok', 'strava', 'youtube'], 
-      required: true 
+    userId: { 
+        type: Schema.Types.ObjectId, 
+        ref: 'User', 
+        required: true, 
+        index: true 
     },
-    username: { type: String, required: true },
-    profileUrl: { type: String, required: true },
-    // IMPORTANT: Access/Refresh tokens should ideally be encrypted before saving
-    // Consider using mongoose-encryption or a similar library/pattern
-    accessToken: { type: String }, 
-    refreshToken: { type: String },
-    tokenExpiry: { type: Date },
-    lastSyncedAt: { type: Date },
-    isActive: { type: Boolean, default: true },
-    metadata: { type: Schema.Types.Mixed }, // Use Mixed for flexible object storage
+    provider: { type: String, required: true, index: true },
+    providerUserId: { type: String, required: true, index: true },
+    accessToken: { type: String, required: true }, // Should be encrypted before saving
+    refreshToken: { type: String }, // Should be encrypted before saving
+    expiresAt: { type: Date },
+    scopes: [{ type: String }],
+    profileData: { type: Schema.Types.Mixed }, // Store arbitrary JSON data from provider
+    lastSync: { type: Date },
+    // Composite unique index to ensure a user can only link one account per provider
+    // index: { userId: 1, provider: 1 }, { unique: true } // Add this if needed
   },
   {
-    timestamps: true,
+    timestamps: true, // Adds createdAt and updatedAt automatically
   }
 );
 
-// Ensure a user can only connect one account per platform
-ExternalProfileSchema.index({ userId: 1, platform: 1 }, { unique: true });
+// Apply the composite unique index if needed
+// ExternalProfileSchema.index({ userId: 1, provider: 1 }, { unique: true });
 
-// Prevent model redefinition
-const ExternalProfile = models.ExternalProfile || model<IExternalProfile>('ExternalProfile', ExternalProfileSchema);
+// Prevent model recompilation
+const ExternalProfile: Model<IExternalProfile> = 
+    models.ExternalProfile || mongoose.model<IExternalProfile>('ExternalProfile', ExternalProfileSchema);
 
 export default ExternalProfile; 

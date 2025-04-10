@@ -238,12 +238,11 @@ export default function SearchPage() {
               clearTimeout(handler);
           };
       }
-  }, [selectedSpecialties, selectedProviderTypes]); // Rerun effect when filters change
+  }, [selectedSpecialties, selectedProviderTypes, searchQuery]); 
 
   // Fetch results whenever relevant dependencies change
   useEffect(() => {
     fetchResults();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchResults]); // Ensure fetchResults is stable or included
 
   return (

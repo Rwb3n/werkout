@@ -1,31 +1,49 @@
-// import mongoose, { Schema, Document, models, model, Types } from 'mongoose'; // mongoose import removed
-import { Schema, Document, models, model, Types } from 'mongoose';
+import mongoose, { Schema, Document, models, Model, Types } from 'mongoose';
 
-// Interface defining the structure of the SeekerProfile document
+// Enum for fitness level (example, adjust as needed)
+export enum FitnessLevel {
+    Beginner = 'beginner',
+    Intermediate = 'intermediate',
+    Advanced = 'advanced',
+}
+
+// Interface for the SeekerProfile document
 export interface ISeekerProfile extends Document {
   userId: Types.ObjectId; // Reference to the User model
-  level?: 'beginner' | 'intermediate' | 'advanced';
-  goals?: string[];
-  interests?: string[];
-  // journey: Milestone[]; // Skipping journey/milestones for now, can add later
+  goals?: string[]; // e.g., ["Weight Loss", "Muscle Gain", "Improve Endurance"]
+  fitnessLevel?: FitnessLevel;
+  preferences?: string; // e.g., "Prefers morning workouts", "Likes group classes"
+  healthConditions?: string; // Consider privacy implications, maybe store sensitive data elsewhere
+  // Add other seeker-specific fields here
   createdAt: Date;
   updatedAt: Date;
 }
 
-const SeekerProfileSchema = new Schema<ISeekerProfile>(
+const SeekerProfileSchema: Schema<ISeekerProfile> = new Schema(
   {
-    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, unique: true, index: true },
-    level: { type: String, enum: ['beginner', 'intermediate', 'advanced'] },
-    goals: { type: [String] },
-    interests: { type: [String], index: true }, // Index interests for potential matching
-    // journey: { type: [MilestoneSchema] } // Add later if Milestone schema is defined
+    userId: { 
+        type: Schema.Types.ObjectId, 
+        ref: 'User', 
+        required: true, 
+        unique: true, // Each user can only have one seeker profile
+        index: true 
+    },
+    goals: [{ type: String, trim: true }],
+    fitnessLevel: {
+      type: String,
+      enum: Object.values(FitnessLevel),
+    },
+    preferences: { type: String, maxlength: 500 },
+    healthConditions: { type: String, maxlength: 1000 }, // Store minimal, non-sensitive info if possible
+    // Add other seeker-specific fields here
   },
   {
-    timestamps: true, // Automatically add createdAt and updatedAt fields
+    timestamps: true, // Adds createdAt and updatedAt automatically
   }
 );
 
-// Prevent model redefinition
-const SeekerProfile = models.SeekerProfile || model<ISeekerProfile>('SeekerProfile', SeekerProfileSchema);
+// Prevent model recompilation
+const SeekerProfile: Model<ISeekerProfile> = 
+    models.SeekerProfile || mongoose.model<ISeekerProfile>('SeekerProfile', SeekerProfileSchema);
 
 export default SeekerProfile; 
