@@ -8,22 +8,6 @@ export enum ResponseTime {
     MoreThan24Hours = 'more_than_24_hours',
 }
 
-// Interface for Credential subdocument
-interface ICredential {
-  title: string;
-  organization: string;
-  year?: number;
-  isVerified: boolean;
-}
-
-// Interface for Service subdocument
-interface IService {
-  title: string;
-  description: string;
-  type?: 'one-on-one' | 'group' | 'online' | 'other';
-  isActive: boolean;
-}
-
 // Interface for the ProviderProfile document
 export interface IProviderProfile extends Document {
   userId: Types.ObjectId; // Reference to the User model
@@ -40,20 +24,6 @@ export interface IProviderProfile extends Document {
   // createdAt: Date;
   // updatedAt: Date;
 }
-
-const CredentialSchema = new Schema<ICredential>({
-  title: { type: String, required: true },
-  organization: { type: String, required: true },
-  year: { type: Number },
-  isVerified: { type: Boolean, default: false },
-}, { _id: false }); // Use default _id generation within array if needed, or add custom ID logic
-
-const ServiceSchema = new Schema<IService>({
-  title: { type: String, required: true },
-  description: { type: String, required: true },
-  type: { type: String, enum: ['one-on-one', 'group', 'online', 'other'] },
-  isActive: { type: Boolean, default: true },
-}, { _id: false });
 
 const ProviderProfileSchema: Schema<IProviderProfile> = new Schema(
   {

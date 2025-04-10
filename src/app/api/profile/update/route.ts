@@ -27,11 +27,11 @@ interface IUserUpdatePayload {
   // Removed contactPreferences as it's not in the current User model
 }
 
-// Corrected field name (fitnessLevel), removed non-existent 'interests'
-interface ISeekerProfileUpdatePayload extends Partial<Pick<ISeekerProfile, 'fitnessLevel' | 'goals' | 'preferences' | 'healthConditions'>> {}
+// Use type alias instead of interface to avoid empty interface lint error
+type ISeekerProfileUpdatePayload = Partial<Pick<ISeekerProfile, 'fitnessLevel' | 'goals' | 'preferences' | 'healthConditions'>>;
 
-// Corrected field name (yearsOfExperience), removed non-existent fields
-interface IProviderProfileUpdatePayload extends Partial<Pick<IProviderProfile, 'bio' | 'specialties' | 'certifications' | 'yearsOfExperience' | 'servicesOffered' | 'availability' | 'responseTime' | 'websiteUrl'>> {}
+// Use type alias instead of interface
+type IProviderProfileUpdatePayload = Partial<Pick<IProviderProfile, 'bio' | 'specialties' | 'certifications' | 'yearsOfExperience' | 'servicesOffered' | 'availability' | 'responseTime' | 'websiteUrl'>>;
 
 // ---------------------------------------------
 
