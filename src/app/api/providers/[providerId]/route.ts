@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 
 // Minimal route handler for testing the signature
+// Using non-destructured second argument
 export async function GET(
   request: Request, 
-  { params }: { params: { providerId: string } }
+  context: { params: { providerId: string } }
 ) {
-  const { providerId } = params; 
+  const { providerId } = context.params; // Destructure inside function body
 
   // Basic check
   if (!providerId) {
