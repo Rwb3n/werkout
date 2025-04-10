@@ -12,6 +12,7 @@ import { Slider } from "@/components/ui/Slider"; // For radius
 import { MapPinIcon } from '@heroicons/react/20/solid';
 import { Badge } from "@/components/ui/Badge"; // Import Badge for specialties
 import { Skeleton } from "@/components/ui/Skeleton"; // Add Skeleton
+import { useRouter, useSearchParams } from 'next/navigation';
 
 // Define a fetcher function for SWR
 const fetcher = (url: string) => fetch(url).then((res) => {
@@ -20,12 +21,6 @@ const fetcher = (url: string) => fetch(url).then((res) => {
   }
   return res.json();
 });
-
-interface SearchParams {
-  lat: number | null;
-  lng: number | null;
-  radius: number;
-}
 
 // Updated result type to include looked-up fields
 interface ProviderSearchResult {
@@ -240,6 +235,12 @@ export default function SearchPage() {
           };
       }
   }, [selectedSpecialties, selectedProviderTypes]); // Rerun effect when filters change
+
+  // Fetch results whenever search params change
+  useEffect(() => {
+    fetchResults();
+    // eslint-disable-next-line react-hooks/exhaustive-deps 
+  }, [fetchResults, searchParams]); // Add searchQuery to deps if fetchResults depends on it directly, or keep disabled if useCallback handles it
 
   return (
     <Container className="py-8">

@@ -1,8 +1,14 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/Card';
+
+// Define the shape of the data for each step
+// Use specific types instead of 'any' if possible
+interface StepData {
+  [key: string]: any; 
+}
 
 interface Step {
   id: string;
@@ -17,14 +23,22 @@ interface MultiStepFormProps {
   // Pass additional props needed by step components
   // e.g., form instance from react-hook-form if managing state centrally
   stepProps?: Record<string, any>; 
+  initialData?: StepData;
+  onSubmit: (data: StepData) => void;
 }
 
-export function MultiStepForm({ steps, onFinish, stepProps = {} }: MultiStepFormProps) {
+export function MultiStepForm({ steps, onFinish, stepProps = {}, initialData = {}, onSubmit }: MultiStepFormProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [formData, setFormData] = useState<StepData>(initialData);
 
   const CurrentStepComponent = steps[currentStepIndex].component;
   const isFirstStep = currentStepIndex === 0;
   const isLastStep = currentStepIndex === steps.length - 1;
+
+  // Type the data parameter explicitly
+  const updateFormData = useCallback((data: Partial<StepData>) => {
+    setFormData(prev => ({ ...prev, ...data }));
+  }, []);
 
   const goToNext = () => {
     // TODO: Add validation check before proceeding

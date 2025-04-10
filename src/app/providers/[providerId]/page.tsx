@@ -3,7 +3,7 @@
 import React from 'react';
 import { Container } from '@/components/layout/Container';
 import useSWR from 'swr';
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
+import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Skeleton } from "@/components/ui/Skeleton";
 

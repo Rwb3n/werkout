@@ -6,6 +6,7 @@ import User from '@/models/User'; // Import User model
 import ProviderProfile from '@/models/ProviderProfile'; // Import ProviderProfile model
 import SeekerProfile from '@/models/SeekerProfile'; // Import SeekerProfile model
 import { getCoordinates } from '@/lib/geocoder'; // Import geocoding utility
+import mongoose from 'mongoose';
 
 export async function POST(request: Request) {
   const { userId: clerkId } = await auth();
@@ -137,7 +138,7 @@ export async function POST(request: Request) {
     } else {
         console.log("Found user in DB:", dbUser._id);
         // --- Step 4a: Update Existing User Document ---
-        const userUpdateData: any = {
+        const userUpdateData: Record<string, any> = {
             location: locationData, // Update location
             contactPreferences: { // Update contact prefs
                 email: contactEmail === true,
@@ -151,7 +152,7 @@ export async function POST(request: Request) {
     }
 
     // --- Step 5: Prepare Profile-Specific Data ---
-    const profileSpecificData: any = {};
+    const profileSpecificData: Record<string, any> = {};
     if (userType === 'seeker') {
         if(level) profileSpecificData.level = level;
         if(goals) profileSpecificData.goals = goals;
@@ -169,7 +170,7 @@ export async function POST(request: Request) {
 
     // --- Step 6: Create/Update Specific Profile Document ---
     if (Object.keys(profileSpecificData).length > 0) {
-      const profileUpdateOptions = { upsert: true, new: true, setDefaultsOnInsert: true };
+      const profileUpdateOptions: mongoose.QueryOptions = { upsert: true, new: true, setDefaultsOnInsert: true };
       if (userType === 'seeker') {
         await SeekerProfile.findOneAndUpdate(
           { userId: dbUser._id }, 

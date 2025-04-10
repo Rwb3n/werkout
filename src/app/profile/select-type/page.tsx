@@ -105,8 +105,8 @@ export default function SelectUserTypePage() {
                         disabled={isLoading}
                     >
                         <div className="flex flex-col">
-                            <span className="font-semibold">I'm a Seeker</span>
-                            <span className="text-sm text-muted-foreground">I'm looking for trainers, classes, or groups.</span>
+                            <span className="font-semibold">I&apos;m a Seeker</span>
+                            <span className="text-sm text-muted-foreground">I&apos;m looking for trainers, classes, or groups.</span>
                         </div>
                     </Button>
                     <Button 
@@ -116,7 +116,7 @@ export default function SelectUserTypePage() {
                         disabled={isLoading}
                     >
                          <div className="flex flex-col">
-                            <span className="font-semibold">I'm a Provider</span>
+                            <span className="font-semibold">I&apos;m a Provider</span>
                             <span className="text-sm text-muted-foreground">I offer training, coaching, or group fitness.</span>
                         </div>
                     </Button>

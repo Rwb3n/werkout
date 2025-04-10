@@ -1,9 +1,31 @@
 import { NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import connectDb from '@/lib/db';
 import User from '@/models/User';
 // We might need ProviderProfile later to populate results
 import ProviderProfile from '@/models/ProviderProfile'; 
-import { getCoordinates } from '@/lib/geocoder';
+// import { getCoordinates } from '@/lib/geocoder';
+import mongoose, { PipelineStage } from 'mongoose'; // Import PipelineStage
+
+// Define interfaces for clarity
+interface AggregationPipelineStage {
+  [key: string]: any; // Define stage structure more specifically if possible
+}
+
+interface LocationFilter {
+  $geoWithin?: { $centerSphere: [[number, number], number] };
+}
+
+interface UserQuery {
+  userType: string;
+  location?: LocationFilter;
+  isActive: boolean;
+}
+
+interface ProviderProfileQuery {
+  specialties?: { $in: string[] };
+  providerType?: { $in: string[] };
+}
 
 // Define interface for the shape after projection
 interface ProjectedProviderResult {
@@ -21,138 +43,138 @@ interface ProjectedProviderResult {
 }
 
 export async function GET(request: Request) {
+  const { userId } = await auth();
   const { searchParams } = new URL(request.url);
   const lat = searchParams.get('lat');
   const lng = searchParams.get('lng');
-  // Radius in miles, default to 10 miles
-  const radius = searchParams.get('radius') || '10'; 
-  const specialtiesParam = searchParams.get('specialties');
-  const providerTypeParam = searchParams.get('providerType');
+  const radius = searchParams.get('radius'); // Radius in miles
+  const specialtiesParam = searchParams.get('specialties'); // Comma-separated string
+  const providerTypesParam = searchParams.get('providerTypes'); // Comma-separated string
   const pageParam = searchParams.get('page') || '1';
-  const limitParam = searchParams.get('limit') || '10'; // Default limit
+  const limitParam = searchParams.get('limit') || '10';
 
-  if (!lat || !lng) {
-    return new NextResponse("Missing latitude or longitude parameters", { status: 400 });
+  // Basic input validation
+  if (!lat || !lng || !radius) {
+    return new NextResponse("Missing latitude, longitude, or radius parameters", { status: 400 });
   }
 
   const latitude = parseFloat(lat);
   const longitude = parseFloat(lng);
-  const searchRadiusMiles = parseFloat(radius);
-
-  // Parse pagination params
+  const radiusMiles = parseFloat(radius);
   const page = parseInt(pageParam, 10);
   const limit = parseInt(limitParam, 10);
-  const skip = (page - 1) * limit;
 
-  if (isNaN(latitude) || isNaN(longitude) || isNaN(searchRadiusMiles) || isNaN(page) || page < 1 || isNaN(limit) || limit < 1) {
-    return new NextResponse("Invalid latitude, longitude, radius, page, or limit", { status: 400 });
+  if (isNaN(latitude) || isNaN(longitude) || isNaN(radiusMiles) || isNaN(page) || isNaN(limit) || page < 1 || limit < 1) {
+    return new NextResponse("Invalid numeric parameters for lat, lng, radius, page, or limit", { status: 400 });
   }
 
-  // Convert radius from miles to meters for MongoDB ($geoNear uses meters)
-  const radiusInMeters = searchRadiusMiles * 1609.34;
-
-  // Prepare filter stages
-  const filterMatchStage: any = {};
-  if (specialtiesParam) {
-    const specialtiesArray = specialtiesParam.split(',').map(s => s.trim()).filter(s => s);
-    if(specialtiesArray.length > 0) {
-        filterMatchStage['providerDetails.specialties'] = { $in: specialtiesArray };
-    }
-  }
-  if (providerTypeParam) {
-    const providerTypeArray = providerTypeParam.split(',').map(s => s.trim()).filter(s => s);
-     if(providerTypeArray.length > 0) {
-        filterMatchStage['providerDetails.providerType'] = { $in: providerTypeArray };
-     }
-  }
+  // Convert radius from miles to radians for MongoDB $centerSphere
+  const radiusRadians = radiusMiles / 3963.2; // Earth's radius in miles approx
 
   try {
     await connectDb();
 
-    // Build the base pipeline stages (before pagination and projection)
-    const basePipeline: any[] = [
-      {
-        $geoNear: {
-          near: { type: 'Point', coordinates: [longitude, latitude] },
-          distanceField: "distance",
-          maxDistance: radiusInMeters,
-          query: { userType: 'provider', isActive: true },
-          spherical: true
-        }
-      },
-      {
-        $lookup: {
-          from: ProviderProfile.collection.name,
-          localField: "_id",
-          foreignField: "userId",
-          as: "providerDetails"
-        }
-      },
-      {
-        $unwind: { path: "$providerDetails", preserveNullAndEmptyArrays: true }
-      }
-    ];
+    // --- Build Aggregation Pipeline --- 
 
-    // Conditionally add the filter $match stage
-    if (Object.keys(filterMatchStage).length > 0) {
-      basePipeline.push({ $match: filterMatchStage });
+    // 1. Initial Match (User collection)
+    const initialMatchStage: PipelineStage.Match = { // Use PipelineStage.Match
+      $match: {
+        userType: 'provider',
+        isActive: true,
+        location: {
+          $geoWithin: {
+            $centerSphere: [[longitude, latitude], radiusRadians]
+          }
+        }
+      }
+    };
+
+    const pipeline: PipelineStage[] = [initialMatchStage]; // Use Mongoose PipelineStage[]
+
+    // 2. Lookup ProviderProfile
+    const lookupStage: PipelineStage.Lookup = { // Use PipelineStage.Lookup
+      $lookup: {
+        from: 'providerprofiles', 
+        localField: '_id', 
+        foreignField: 'userId', 
+        as: 'providerProfileInfo'
+      }
+    };
+    pipeline.push(lookupStage);
+
+    // 3. Unwind the providerProfileInfo array
+    const unwindStage: PipelineStage.Unwind = { $unwind: '$providerProfileInfo' }; // Use PipelineStage.Unwind
+    pipeline.push(unwindStage);
+
+    // 4. Match based on ProviderProfile filters
+    const profileMatchFilter: Record<string, any> = {}; // Build the filter object
+    if (specialtiesParam) {
+      profileMatchFilter['providerProfileInfo.specialties'] = { $in: specialtiesParam.split(',').map(s => s.trim()) };
+    }
+    if (providerTypesParam) {
+      profileMatchFilter['providerProfileInfo.providerType'] = { $in: providerTypesParam.split(',').map(t => t.trim()) };
+    }
+    
+    if (Object.keys(profileMatchFilter).length > 0) {
+        const profileMatchStage: PipelineStage.Match = { $match: profileMatchFilter }; // Use PipelineStage.Match
+        pipeline.push(profileMatchStage);
     }
 
-    // Use $facet to get paginated results and total count in one query
-    const aggregationResult = await User.aggregate([
-      ...basePipeline,
-      {
-        $facet: {
-          // Branch 1: Get total count matching the filters
-          metadata: [
-            { $count: 'total' }
-          ],
-          // Branch 2: Get the actual paginated data
-          data: [
-            { $sort: { distance: 1 } }, // Sort before skip/limit
-            { $skip: skip },
-            { $limit: limit },
-            { // Project fields for the final results
-              $project: {
-                clerkId: 0, contactPreferences: 0, isActive: 0,
-                createdAt: 0, updatedAt: 0, __v: 0,
-                _id: 1, firstName: 1, lastName: 1, email: 1, 
-                location: 1, userType: 1, distance: 1,
-                bio: "$providerDetails.bio",
-                specialties: "$providerDetails.specialties",
-                experience: "$providerDetails.experience",
-                providerType: "$providerDetails.providerType",
-              }
-            }
-          ]
+    // 5. Projection
+    const projectStage: PipelineStage.Project = { // Use PipelineStage.Project
+      $project: {
+        _id: 0, 
+        userId: '$_id', 
+        clerkId: 1,
+        firstName: 1,
+        lastName: 1,
+        email: 1, 
+        location: {
+          city: '$location.city',
+          state: '$location.state'
+        },
+        providerProfile: {
+          bio: '$providerProfileInfo.bio',
+          specialties: '$providerProfileInfo.specialties',
+          providerType: '$providerProfileInfo.providerType',
+          experience: '$providerProfileInfo.experience'
         }
       }
-    ]);
+    };
+    pipeline.push(projectStage);
 
-    // Type the results based on the $project stage
-    const results: ProjectedProviderResult[] = aggregationResult[0].data;
-    const totalDocuments = aggregationResult[0].metadata[0]?.total || 0;
-    const totalPages = Math.ceil(totalDocuments / limit);
+    // 6. Pagination
+    const skip = (page - 1) * limit;
+    const skipStage: PipelineStage.Skip = { $skip: skip }; // Use PipelineStage.Skip
+    const limitStage: PipelineStage.Limit = { $limit: limit }; // Use PipelineStage.Limit
+    pipeline.push(skipStage);
+    pipeline.push(limitStage);
 
-    // Convert distance from meters back to miles for frontend display
-    const resultsWithMiles = results.map(p => ({
-      ...p,
-      distanceMiles: parseFloat((p.distance / 1609.34).toFixed(2))
-    }));
+    // --- Execute Pipeline --- 
+    console.log("Executing aggregation pipeline:", JSON.stringify(pipeline, null, 2));
+    const results = await User.aggregate(pipeline).exec(); // Add .exec()
 
-    // Return paginated results and metadata
+    // --- Get total count --- 
+    const countPipeline = pipeline.slice(0, -2); // Remove $skip and $limit
+    const countStage: PipelineStage.Count = { $count: 'totalCount' }; // Use PipelineStage.Count
+    countPipeline.push(countStage);
+    console.log("Executing count pipeline:", JSON.stringify(countPipeline, null, 2));
+    const countResult = await User.aggregate(countPipeline).exec(); // Add .exec()
+    const totalCount = countResult.length > 0 ? countResult[0].totalCount : 0;
+
     return NextResponse.json({
-        results: resultsWithMiles,
-        pagination: {
-            currentPage: page,
-            totalPages: totalPages,
-            totalResults: totalDocuments,
-            limit: limit
-        }
+      data: results,
+      pagination: {
+        page: page,
+        limit: limit,
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / limit)
+      }
     });
 
   } catch (error) {
-    console.error("Error performing provider search:", error);
-    return new NextResponse("Internal Server Error", { status: 500 });
+    console.error("Error during provider search:", error);
+    const typedError = error as Error;
+    return new NextResponse(typedError.message || "Internal Server Error", { status: 500 });
   }
 } 

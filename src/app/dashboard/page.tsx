@@ -8,7 +8,6 @@ import { Container } from '@/components/layout/Container';
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import Link from 'next/link';
 
 // Define the expected shape of the profile data from the API
 interface UserProfileData {
@@ -35,7 +34,7 @@ interface UserProfileData {
 const fetcher = async (url: string): Promise<UserProfileData> => {
   const res = await fetch(url);
   if (!res.ok) {
-    const error = new Error('An error occurred while fetching the data.') as any;
+    const error = new Error('An error occurred while fetching the data.') as Error & { info?: any; status?: number };
     // Attach extra info to the error object.
     try {
       error.info = await res.json();

@@ -1,4 +1,5 @@
-import mongoose, { Schema, Document, models, model } from 'mongoose';
+// import mongoose, { Schema, Document, models, model } from 'mongoose'; // mongoose import removed
+import { Schema, Document, models, model } from 'mongoose';
 
 // Interface defining the structure of the Location subdocument
 interface ILocation {

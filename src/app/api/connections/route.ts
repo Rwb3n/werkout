@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { auth, clerkClient as clerkClientFactory } from '@clerk/nextjs/server';
 import connectDb from '@/lib/db';
 import User from '@/models/User';
 import Connection from '@/models/Connection';
@@ -9,112 +9,152 @@ import mongoose from 'mongoose';
  * GET /api/connections
  * Retrieves connections for the currently logged-in user.
  */
-export async function GET(request: Request) {
-  const { userId: clerkId } = await auth();
+export async function GET(/*_request: Request*/) { // Keep request commented out if unused
+    const { userId } = await auth();
 
-  if (!clerkId) {
-    return new NextResponse("Unauthorized", { status: 401 });
-  }
-
-  try {
-    await connectDb();
-    const dbUser = await User.findOne({ clerkId: clerkId });
-
-    if (!dbUser) {
-      console.error(`Get connections error: User with clerkId ${clerkId} not found in DB.`);
-      return new NextResponse("User not found", { status: 404 });
+    if (!userId) {
+        return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    // Find connections where the user is either the seeker or the provider
-    const connections = await Connection.find({
-      $or: [{ seekerId: dbUser._id }, { providerId: dbUser._id }],
-    })
-    .populate('seekerId', 'firstName lastName email userType') // Populate seeker details
-    .populate('providerId', 'firstName lastName email userType') // Populate provider details
-    .sort({ createdAt: -1 }); // Sort by most recent
+    try {
+        // Placeholder logic: Return empty array
+        // In a real implementation: Find User by clerkId, then find Connections where user is initiator or recipient, populate user details.
+        console.log(`Placeholder: Fetching connections for user ${userId}`);
+        
+        // Example DB interaction (Uncomment and adapt when Connection model is ready)
+        /* 
+        await connectDb();
+        const currentUser = await User.findOne({ clerkId: userId });
+        if (!currentUser) {
+            return new NextResponse("User not found", { status: 404 });
+        }
 
-    return NextResponse.json(connections);
+        const connections = await Connection.find({
+            $or: [
+                { initiator: currentUser._id },
+                { recipient: currentUser._id }
+            ],
+            status: 'accepted' // Example: only fetch accepted connections
+        })
+        .populate('initiator', 'firstName lastName userType location') // Populate basic details
+        .populate('recipient', 'firstName lastName userType location');
+        
+        // Format connections to show the 'other' user
+        const formattedConnections = connections.map(conn => {
+             // Convert Mongoose doc to plain object if needed
+            const connObj = conn.toObject ? conn.toObject() : conn;
+            const otherUser = connObj.initiator._id.toString() === currentUser._id.toString() 
+                              ? connObj.recipient 
+                              : connObj.initiator;
+            return {
+                connectionId: connObj._id,
+                status: connObj.status,
+                connectedAt: connObj.updatedAt, // Or a dedicated acceptedAt field
+                partner: {
+                    userId: otherUser._id,
+                    firstName: otherUser.firstName,
+                    lastName: otherUser.lastName,
+                    userType: otherUser.userType,
+                    location: otherUser.location?.city ? `${otherUser.location.city}, ${otherUser.location.state}` : 'N/A'
+                }
+            };
+        });
 
-  } catch (error) {
-    console.error("Error fetching connections:", error);
-    return new NextResponse("Internal Server Error", { status: 500 });
-  }
+        return NextResponse.json({ connections: formattedConnections });
+        */
+       
+        return NextResponse.json({ connections: [] }); // Placeholder response
+
+    } catch (error) {
+        console.error("Error fetching connections:", error);
+        // Explicitly type error as Error or unknown
+        const typedError = error as Error;
+        const errorMessage = typedError?.message || "Internal Server Error";
+        return new NextResponse(errorMessage, { status: 500 });
+    }
 }
 
 /**
  * POST /api/connections
  * Initiates a new connection request.
  */
-export async function POST(request: Request) {
-    const { userId: clerkId } = await auth();
+export async function POST(_request: Request) { // Rename to _request
+    const { userId } = await auth();
 
-    if (!clerkId) {
-      return new NextResponse("Unauthorized", { status: 401 });
+    if (!userId) {
+        return new NextResponse("Unauthorized", { status: 401 });
     }
 
     try {
-        const body = await request.json();
-        const { targetUserId, message } = body;
+        const body = await _request.json(); // Use _request here
+        const { targetUserId } = body;
 
-        if (!targetUserId || !mongoose.Types.ObjectId.isValid(targetUserId)) {
-             return new NextResponse("Missing or invalid targetUserId", { status: 400 });
+        if (!targetUserId) {
+            return new NextResponse("Missing targetUserId in request body", { status: 400 });
         }
 
+        // Basic Validation (add more robust checks later, e.g., is ObjectId valid?)
+        if (typeof targetUserId !== 'string') {
+            return new NextResponse("Invalid targetUserId format", { status: 400 });
+        }
+
+        // Prevent self-connection (optional, depending on requirements)
+        // This requires fetching the initiator's DB ID based on clerkId
+        // await connectDb();
+        // const initiatorUser = await User.findOne({ clerkId: userId });
+        // if (initiatorUser && initiatorUser._id.toString() === targetUserId) {
+        //     return new NextResponse("Cannot connect with yourself", { status: 400 });
+        // }
+
+        // Placeholder logic: Log the request
+        // In a real implementation: Create a Connection record in DB with status 'pending'
+        console.log(`Placeholder: User ${userId} initiated connection request to user ${targetUserId}`);
+
+        // Example DB interaction (Uncomment and adapt when Connection model is ready)
+        /*
         await connectDb();
-        const initiatorUser = await User.findOne({ clerkId: clerkId });
+        const initiatorUser = await User.findOne({ clerkId: userId });
         const targetUser = await User.findById(targetUserId);
 
         if (!initiatorUser) {
-            console.error(`Initiate connection error: Initiator with clerkId ${clerkId} not found in DB.`);
+            console.error(`Initiate connection error: Initiator with clerkId ${userId} not found in DB.`);
             return new NextResponse("Initiator user not found", { status: 404 });
         }
         if (!targetUser) {
             return new NextResponse("Target user not found", { status: 404 });
         }
 
-        // Prevent connecting to self
-        if (initiatorUser._id.equals(targetUser._id)) {
-            return new NextResponse("Cannot connect with yourself", { status: 400 });
-        }
-
-        // Determine seeker and provider IDs based on user types
-        let seekerId, providerId;
-        if (initiatorUser.userType === 'seeker' && targetUser.userType === 'provider') {
-            seekerId = initiatorUser._id;
-            providerId = targetUser._id;
-        } else if (initiatorUser.userType === 'provider' && targetUser.userType === 'seeker') {
-            // Allow provider to initiate? Or enforce seeker-initiates? For now, allow.
-            seekerId = targetUser._id;
-            providerId = initiatorUser._id;
-        } else {
-            return new NextResponse("Connection must be between a Seeker and a Provider", { status: 400 });
-        }
-
-        // Check if a connection already exists (pending or otherwise)
-        const existingConnection = await Connection.findOne({ seekerId, providerId });
-        if (existingConnection) {
-             return new NextResponse(`Connection already exists with status: ${existingConnection.status}`, { status: 409 }); // Conflict
-        }
-
-        // Create the new connection request
-        const newConnection = new Connection({
-            seekerId,
-            providerId,
-            status: 'pending', // Default status
-            initiatedBy: initiatorUser.userType,
-            message: message || undefined // Optional message
+        // Check if connection already exists
+        const existingConnection = await Connection.findOne({
+            $or: [
+                { initiator: initiatorUser._id, recipient: targetUser._id },
+                { initiator: targetUser._id, recipient: initiatorUser._id }
+            ]
         });
 
-        await newConnection.save();
+        if (existingConnection) {
+            return new NextResponse("Connection already exists or pending", { status: 409 });
+        }
 
-        return NextResponse.json({ success: true, connection: newConnection }, { status: 201 });
+        // Create new connection
+        const newConnection = new Connection({
+            initiator: initiatorUser._id,
+            recipient: targetUser._id,
+            status: 'pending'
+        });
+        await newConnection.save();
+        */
+
+        return NextResponse.json({ success: true, message: "Connection request initiated (placeholder)." });
 
     } catch (error) {
         console.error("Error initiating connection:", error);
-        // Handle potential duplicate key error from the unique index
-        if (error instanceof Error && (error as any).code === 11000) {
-            return new NextResponse("Connection already exists", { status: 409 });
+        if (error instanceof SyntaxError) { // Handle JSON parsing errors
+            return new NextResponse("Invalid JSON in request body", { status: 400 });
         }
-        return new NextResponse("Internal Server Error", { status: 500 });
+        // Explicitly type error as Error or unknown
+        const typedError = error as Error;
+        const errorMessage = typedError?.message || "Internal Server Error";
+        return new NextResponse(errorMessage, { status: 500 });
     }
 } 

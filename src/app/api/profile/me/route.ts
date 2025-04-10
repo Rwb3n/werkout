@@ -4,9 +4,10 @@ import connectDb from '@/lib/db';
 import User from '@/models/User';
 import ProviderProfile from '@/models/ProviderProfile';
 import SeekerProfile from '@/models/SeekerProfile';
-import ExternalProfile from '@/models/ExternalProfile';
+// ExternalProfile import removed as it was unused
+// import ExternalProfile from '@/models/ExternalProfile'; 
 
-export async function GET(request: Request) {
+export async function GET(/*request: Request*/) { // Comment out unused request parameter
   console.log("[/api/profile/me] GET request received.");
   let clerkId: string | null = null;
   try {

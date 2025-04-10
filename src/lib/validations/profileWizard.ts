@@ -1,10 +1,16 @@
 import * as z from "zod";
+import { isValidPhoneNumber } from 'react-phone-number-input/input'
+
+// Define constants or fetch from a config/API if they change often
+const MAX_ARRAY_LENGTH = 5;
+// GOALS_INTERESTS removed as unused
+// const GOALS_INTERESTS = ["Lose Weight", "Build Muscle", "Improve Endurance", "Learn New Skill", "Stay Active"];
+// SPECIALTIES removed as unused
+// const SPECIALTIES = ["Weight Loss", "Strength Training", "Yoga", "Pilates", "Running Coach", "Nutrition"];
 
 // TODO: Define actual lists for multi-select/tags/radio
 const FITNESS_LEVELS = ["beginner", "intermediate", "advanced"] as const;
-const GOALS_INTERESTS = ["weight_loss", "muscle_gain", "cardio", "yoga", "pilates", "crossfit", "running"] as const;
 const PROVIDER_TYPES = ["trainer", "coach", "group_leader", "gym", "studio"] as const;
-const SPECIALTIES = ["personal_training", "group_fitness", "nutrition", "strength_conditioning", "yoga", "pilates"] as const;
 
 // --- Location Schema (Shared) ---
 const locationSchema = z.object({
