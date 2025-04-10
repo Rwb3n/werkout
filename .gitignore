@@ -41,3 +41,15 @@ yarn-error.log*
 next-env.d.ts
 
 *storybook.log
+
+# Project-specific files irrelevant to production
+/workflow_state.md
+/log_archive.md
+/spec.md
+/implement.md
+/stack.md
+/config.md
+/clerk-front-swagger.json
+/clerk-back-swagger.json
+/.storybook/
+/vitest.config.ts

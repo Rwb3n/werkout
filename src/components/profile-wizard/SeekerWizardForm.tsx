@@ -3,6 +3,7 @@
 import React from 'react';
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Resolver } from "react-hook-form";
 
 import { MultiStepForm } from "@/components/common/MultiStepForm";
 // Import step components
@@ -25,7 +26,8 @@ export function SeekerWizardForm({ onComplete }: SeekerWizardFormProps) {
   ];
 
   const form = useForm<SeekerWizardData>({
-    resolver: zodResolver(seekerWizardSchema),
+    // Use type assertion to bypass the type mismatch
+    resolver: zodResolver(seekerWizardSchema) as Resolver<SeekerWizardData>,
     defaultValues: { 
       level: undefined,
       goals: [],
@@ -33,7 +35,7 @@ export function SeekerWizardForm({ onComplete }: SeekerWizardFormProps) {
       city: '',
       state: '',
       country: '',
-      // Adjusted default values for flattened contact prefs
+      // Default values for contact preferences
       contactEmail: true, 
       contactWhatsapp: false,
       contactPhone: false,
@@ -41,26 +43,34 @@ export function SeekerWizardForm({ onComplete }: SeekerWizardFormProps) {
   });
 
   // Handle final submission, including cross-field validation
-  const handleFinish = form.handleSubmit((data) => {
-    // Validation for flattened contact prefs
-    if (!data.contactEmail && !data.contactPhone && !data.contactWhatsapp) {
-        form.setError("contactEmail", { // Assign error to one field
-            type: "manual", 
-            message: "Please select at least one contact method" 
-        });
-        return; // Stop submission
-    }
-    console.log("Seeker Wizard finished:", data);
-    // TODO: Potentially re-structure data before calling onComplete 
-    // if the backend expects a nested contactPreferences object
-    onComplete(data);
-  });
+  const handleFinish = () => {
+    form.handleSubmit((data) => {
+      // Validation for flattened contact prefs
+      if (!data.contactEmail && !data.contactPhone && !data.contactWhatsapp) {
+          form.setError("contactEmail", { // Assign error to one field
+              type: "manual", 
+              message: "Please select at least one contact method" 
+          });
+          return; // Stop submission
+      }
+      console.log("Seeker Wizard finished:", data);
+      // TODO: Potentially re-structure data before calling onComplete 
+      // if the backend expects a nested contactPreferences object
+      onComplete(data);
+    })();
+  };
+
+  // Adapter function to match the expected signature for MultiStepForm
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const onFinishAdapter = (_unused: Record<string, unknown>) => {
+    handleFinish();
+  };
 
   return (
     <FormProvider {...form}>
       <MultiStepForm 
         steps={seekerSteps} 
-        onFinish={handleFinish} 
+        onFinish={onFinishAdapter} 
       />
     </FormProvider>
   );

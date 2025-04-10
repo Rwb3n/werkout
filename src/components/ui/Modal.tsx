@@ -56,26 +56,36 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
                 )}
               >
                 {/* Optional Title and Close Button */}
-                {(title || onClose) && (
+                {Boolean(title) && (
                   <div className="flex items-start justify-between mb-4">
-                    {title && (
-                      <Dialog.Title
-                        as="h3"
-                        className="text-lg font-medium leading-6 text-foreground"
-                      >
-                        {title}
-                      </Dialog.Title>
-                    )}
-                    {onClose && (
-                      <button
-                        type="button"
-                        className="ml-auto inline-flex items-center rounded-md bg-transparent p-1.5 text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                        onClick={onClose}
-                      >
-                        <span className="sr-only">Close</span>
-                        <XMarkIcon className="h-6 w-6" aria-hidden="true" />
-                      </button>
-                    )}
+                    <Dialog.Title
+                      as="h3"
+                      className="text-lg font-medium leading-6 text-foreground"
+                    >
+                      {title}
+                    </Dialog.Title>
+                    <button
+                      type="button"
+                      className="ml-auto inline-flex items-center rounded-md bg-transparent p-1.5 text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                      onClick={onClose}
+                    >
+                      <span className="sr-only">Close</span>
+                      <XMarkIcon className="h-6 w-6" aria-hidden="true" />
+                    </button>
+                  </div>
+                )}
+
+                {/* If there's no title but we need a close button */}
+                {!title && (
+                  <div className="flex justify-end mb-4">
+                    <button
+                      type="button"
+                      className="inline-flex items-center rounded-md bg-transparent p-1.5 text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                      onClick={onClose}
+                    >
+                      <span className="sr-only">Close</span>
+                      <XMarkIcon className="h-6 w-6" aria-hidden="true" />
+                    </button>
                   </div>
                 )}
 

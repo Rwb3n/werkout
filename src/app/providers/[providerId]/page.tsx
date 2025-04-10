@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { use } from 'react'; // Add React.use for unwrapping Promise
 import { Container } from '@/components/layout/Container';
 import useSWR from 'swr';
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
@@ -36,12 +37,16 @@ interface PublicProviderProfile {
     verificationStatus?: string;
 }
 
-interface ProviderProfilePageProps {
-  params: { providerId: string; };
-}
+// Updated for Next.js 15 compatibility
+type PageProps = {
+  params: Promise<{ providerId: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
 
-export default function ProviderProfilePage({ params }: ProviderProfilePageProps) {
-  const { providerId } = params;
+export default function ProviderProfilePage({ params }: PageProps) {
+  // Use React.use to unwrap the Promise in client components
+  const { providerId } = use(params);
+  
   const apiUrl = providerId ? `/api/providers/${providerId}` : null;
 
   const { data: profile, error, isLoading } = useSWR<PublicProviderProfile>(apiUrl, fetcher);

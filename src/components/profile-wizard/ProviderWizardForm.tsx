@@ -47,11 +47,17 @@ export function ProviderWizardForm({ onComplete }: ProviderWizardFormProps) {
     onComplete(data);
   });
 
+  // Adapter function to match the expected signature for MultiStepForm
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const onFinishAdapter = (_unused: Record<string, unknown>) => {
+    handleFinish();
+  };
+
   return (
     <FormProvider {...form}>
       <MultiStepForm 
         steps={providerSteps} 
-        onFinish={handleFinish} 
+        onFinish={onFinishAdapter} 
       />
     </FormProvider>
   );

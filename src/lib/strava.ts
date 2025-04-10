@@ -12,10 +12,10 @@ const STRAVA_TOKEN_URL = 'https://www.strava.com/oauth/token';
  * @throws Error if configuration is missing or Strava API returns an error.
  */
 export const refreshStravaToken = async (
-  externalProfile: Pick<IExternalProfile, 'platform' | 'refreshToken' | 'userId' | '_id'>
+  externalProfile: Pick<IExternalProfile, 'provider' | 'refreshToken' | 'userId' | '_id'>
 ): Promise<IExternalProfile | null> => {
 
-  if (externalProfile.platform !== 'strava' || !externalProfile.refreshToken) {
+  if (externalProfile.provider !== 'strava' || !externalProfile.refreshToken) {
     console.error('Invalid profile provided for Strava token refresh.');
     return null;
   }
@@ -70,7 +70,7 @@ export const refreshStravaToken = async (
     }
 
     // Convert expires_at to Date object
-    const newTokenExpiry = new Date(newExpiresAtTimestamp * 1000);
+    const newExpiresAt = new Date(newExpiresAtTimestamp * 1000);
 
     // TODO: Encrypt newAccessToken and newRefreshToken before saving
     const encryptedNewAccessToken = newAccessToken; // Placeholder
@@ -84,7 +84,7 @@ export const refreshStravaToken = async (
         $set: {
           accessToken: encryptedNewAccessToken,
           refreshToken: encryptedNewRefreshToken,
-          tokenExpiry: newTokenExpiry,
+          expiresAt: newExpiresAt,
           isActive: true, // Ensure it's marked active if refresh succeeds
           // Optionally update lastSyncedAt or add a lastRefreshedAt field
         },
@@ -96,7 +96,7 @@ export const refreshStravaToken = async (
         throw new Error(`Failed to find and update ExternalProfile ${externalProfile._id} after token refresh.`);
     }
 
-    console.log(`Successfully refreshed Strava token for user ${externalProfile.userId}. New expiry: ${newTokenExpiry}`);
+    console.log(`Successfully refreshed Strava token for user ${externalProfile.userId}. New expiry: ${newExpiresAt}`);
     return updatedProfile;
 
   } catch (error) {
@@ -143,7 +143,7 @@ export const getStravaActivities = async (
   options: { limit?: number; before?: number; after?: number } = {}
 ): Promise<StravaActivity[] | null> => {
 
-  if (externalProfile.platform !== 'strava' || !externalProfile.accessToken) {
+  if (externalProfile.provider !== 'strava' || !externalProfile.accessToken) {
     console.error('Invalid profile provided for fetching Strava activities.');
     return null;
   }
@@ -155,7 +155,7 @@ export const getStravaActivities = async (
   const oneHourFromNow = new Date();
   oneHourFromNow.setHours(oneHourFromNow.getHours() + 1);
 
-  if (!externalProfile.tokenExpiry || externalProfile.tokenExpiry <= oneHourFromNow) {
+  if (!externalProfile.expiresAt || externalProfile.expiresAt <= oneHourFromNow) {
     console.log(`Strava token for user ${externalProfile.userId} expired or expiring soon. Attempting refresh...`);
     const refreshedProfile = await refreshStravaToken(externalProfile);
     if (!refreshedProfile || !refreshedProfile.accessToken) {

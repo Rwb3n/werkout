@@ -53,6 +53,7 @@ export const providerStep1Schema = z.object({
   bio: z.string().min(50, "Please provide a more detailed bio (min 50 chars).").max(1000, "Bio exceeds maximum length (1000 chars)."),
   experience: z.coerce.number().min(0, "Experience cannot be negative.").optional(),
   languages: z.array(z.string()).optional(),
+  specialties: z.array(z.string()).min(1, "Please select at least one specialty"),
   responseTime: z.enum(['within_hour', 'within_day', 'within_few_days', 'other']).optional(),
   providerType: z.enum(PROVIDER_TYPES, {
     required_error: "Please select your provider type.",
@@ -76,6 +77,12 @@ const credentialSchema = z.object({
 
 export const providerStep2Schema = z.object({
     credentials: z.array(credentialSchema).min(0), // Allow empty initially, maybe require 1 later?
+    services: z.array(z.object({
+        id: z.string().optional(), // For potential editing/key prop
+        title: z.string().min(1, "Service title is required"),
+        description: z.string().optional(),
+        type: z.string().optional()
+    })).min(1, "Please add at least one service"),
 });
 export type ProviderStep2Data = z.infer<typeof providerStep2Schema>;
 

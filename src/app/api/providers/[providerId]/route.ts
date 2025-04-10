@@ -1,20 +1,18 @@
 import { NextResponse } from 'next/server';
 
-// Minimal route handler for testing the signature
-// Using non-destructured second argument with TypeScript type annotations
+// Updated for Next.js 15 - params is now a Promise!
 export async function GET(
-  request: Request, 
-  context: { params: { providerId: string } }
+  request: Request,
+  { params }: { params: Promise<{ providerId: string }> }
 ) {
-  const { providerId } = context.params; // Destructure inside function body
-
-  // Basic check
+  // MUST await the params in Next.js 15
+  const paramsData = await params;
+  const providerId = paramsData.providerId;
+  
   if (!providerId) {
     return new NextResponse("Missing Provider ID", { status: 400 });
   }
-
-  console.log(`API route received providerId: ${providerId}`);
-
-  // Simple success response
-  return NextResponse.json({ message: `Successfully received ID: ${providerId}` });
+  
+  // Minimal response for testing
+  return NextResponse.json({ id: providerId });
 } 
